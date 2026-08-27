@@ -1,4 +1,14 @@
-Giovanny Barbers/.vs/Giovanny Barbers/DesignTimeBuild/.dtbcache.v2
-Giovanny Barbers/.vs/Giovanny Barbers/FileContentIndex/b19af31b-133b-441d-9f01-44b4b75ceb10.vsidx
-Giovanny Barbers/.vs/Giovanny Barbers/v17/.suo
-Giovanny Barbers/.vs/Giovanny Barbers/FileContentIndex/d4a1a954-b5fc-419d-8ccd-a045b94f5260.vsidx
+# Carpetas de Visual Studio y compilación
+.vs/
+bin/
+obj/
+
+# Archivos de configuración de usuario (no se comparten)
+*.user
+*.suo
+
+# Otros archivos comunes que genera Visual Studio
+*.dbmdl
+*.jfm
+*.pdb
+*.cache
