@@ -1,0 +1,14 @@
+# Carpetas de Visual Studio y compilación
+.vs/
+bin/
+obj/
+
+# Archivos de configuración de usuario (no se comparten)
+*.user
+*.suo
+
+# Otros archivos comunes que genera Visual Studio
+*.dbmdl
+*.jfm
+*.pdb
+*.cache
