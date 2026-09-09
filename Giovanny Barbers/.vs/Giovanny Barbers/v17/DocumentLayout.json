@@ -1,20 +1,44 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\cuenta\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\",
+  "WorkspaceRootPath": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\cuenta\\documents\\github\\giovanny-s-barber\\giovanny barbers\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\conexionbd.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:conexionbd.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\login.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:login.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
     {
-      "Orientation": 1,
+      "Orientation": 0,
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedHeight": 286,
-          "SelectedChildIndex": 9,
+          "DockedWidth": 200,
+          "SelectedChildIndex": 13,
           "Children": [
             {
               "$type": "Bookmark",
@@ -54,20 +78,97 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Form1.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\cuenta\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Form1.cs",
-              "RelativeDocumentMoniker": "Form1.cs",
-              "ToolTip": "C:\\Users\\cuenta\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Form1.cs [Design]",
-              "RelativeToolTip": "Form1.cs [Design]",
+              "DocumentIndex": 6,
+              "Title": "Login.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.Designer.cs",
+              "RelativeDocumentMoniker": "Login.Designer.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.Designer.cs",
+              "RelativeToolTip": "Login.Designer.cs",
+              "ViewState": "AgIAAGMAAAAAAAAAAAAYwH8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-27T03:27:00.912Z",
-              "EditorCaption": " [Design]"
+              "WhenOpened": "2026-09-04T08:36:40.824Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Home.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Home.cs",
+              "RelativeDocumentMoniker": "Home.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Home.cs [Dise\u00F1o]",
+              "RelativeToolTip": "Home.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-04T08:31:14.25Z",
+              "EditorCaption": " [Dise\u00F1o]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ConexionBD.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\ConexionBD.cs",
+              "RelativeDocumentMoniker": "ConexionBD.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\ConexionBD.cs",
+              "RelativeToolTip": "ConexionBD.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-04T08:26:06.975Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-04T08:23:20.512Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Login.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs",
+              "RelativeDocumentMoniker": "Login.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs",
+              "RelativeToolTip": "Login.cs",
+              "ViewState": "AgIAABsAAAAQzczMzMwwwDIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-04T08:18:45.063Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-04T08:15:06.446Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Login.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs",
+              "RelativeDocumentMoniker": "Login.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs [Dise\u00F1o]",
+              "RelativeToolTip": "Login.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-04T08:15:04.318Z",
+              "EditorCaption": " [Dise\u00F1o]"
             }
           ]
         },
         {
-          "DockedHeight": 114,
+          "DockedWidth": 200,
           "SelectedChildIndex": -1,
           "Children": [
             {
