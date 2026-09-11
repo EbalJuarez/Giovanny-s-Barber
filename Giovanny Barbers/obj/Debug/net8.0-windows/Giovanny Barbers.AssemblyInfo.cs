@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Giovanny Barbers")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8ad96d6b42d22ec36e7271431ea1e3e96d6c0c49")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c1c4057648160765939bc64ba693dfeb4aef8083")]
 [assembly: System.Reflection.AssemblyProductAttribute("Giovanny Barbers")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Giovanny Barbers")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

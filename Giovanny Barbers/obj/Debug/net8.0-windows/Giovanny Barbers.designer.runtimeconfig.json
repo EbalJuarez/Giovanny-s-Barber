@@ -12,8 +12,8 @@
       }
     ],
     "additionalProbingPaths": [
-      "C:\\Users\\Ebal\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\Ebal\\.nuget\\packages",
+      "C:\\Users\\cuenta\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\cuenta\\.nuget\\packages",
       "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
     ],
     "configProperties": {
