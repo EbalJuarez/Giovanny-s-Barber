@@ -102,6 +102,7 @@
             dataGridViewClientes.RowHeadersWidth = 51;
             dataGridViewClientes.Size = new Size(680, 188);
             dataGridViewClientes.TabIndex = 6;
+            dataGridViewClientes.CellContentClick += dataGridViewClientes_CellContentClick;
             // 
             // comboBoxServicios
             // 
@@ -140,6 +141,7 @@
             buttonRegistrar.TabIndex = 10;
             buttonRegistrar.Text = "Registrar";
             buttonRegistrar.UseVisualStyleBackColor = true;
+            buttonRegistrar.Click += buttonRegistrar_Click_1;
             // 
             // Clientes
             // 
@@ -159,6 +161,7 @@
             Controls.Add(label1);
             Name = "Clientes";
             Text = "Clientes";
+            Load += Clientes_Load_1;
             ((System.ComponentModel.ISupportInitialize)dataGridViewClientes).EndInit();
             ResumeLayout(false);
             PerformLayout();

@@ -1,5 +1,8 @@
 using System;
 using System.Windows.Forms;
+using Giovanny_Barbers.Modelos;
+
+//using Giovanny_Barbers.Modelos;
 using Microsoft.Data.SqlClient;
 
 namespace Giovanny_Barbers
@@ -8,6 +11,8 @@ namespace Giovanny_Barbers
     {
         public Login()
         {
+            
+            
             InitializeComponent();
         }
 
