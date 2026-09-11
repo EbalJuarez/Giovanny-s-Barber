@@ -37,6 +37,8 @@ namespace Giovanny_Barbers
         private void CargarTrabajadores()
         {
             dataGridViewTrabajadores.DataSource = TrabajadorDAO.ObtenerTodos();
+            dataGridViewTrabajadores.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewTrabajadores.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
         }
 
         private void LimpiarCampos()
