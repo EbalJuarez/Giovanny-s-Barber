@@ -1,7 +1,32 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\cuenta\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\",
-  "Documents": [],
+  "WorkspaceRootPath": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\datos\\trabajadordao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:datos\\trabajadordao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\modelos\\trabajadores.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:modelos\\trabajadores.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|c:\\users\\ebal\\documents\\github\\giovanny-s-barber\\giovanny barbers\\login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A9D742EB-0DE6-443B-BD58-9F6DAA240744}|Giovanny Barbers.csproj|solutionrelative:login.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 1,
@@ -9,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 286,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 12,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,6 +71,82 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Login.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs",
+              "RelativeDocumentMoniker": "Login.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs",
+              "RelativeToolTip": "Login.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T08:08:28.666Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Login.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs",
+              "RelativeDocumentMoniker": "Login.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Login.cs [Dise\u00F1o]",
+              "RelativeToolTip": "Login.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T08:08:26.344Z",
+              "EditorCaption": " [Dise\u00F1o]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Form1.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Form1.cs",
+              "RelativeDocumentMoniker": "Form1.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Form1.cs",
+              "RelativeToolTip": "Form1.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAAowEwAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T08:02:55.919Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "TrabajadorDAO.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Datos\\TrabajadorDAO.cs",
+              "RelativeDocumentMoniker": "Datos\\TrabajadorDAO.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Datos\\TrabajadorDAO.cs",
+              "RelativeToolTip": "Datos\\TrabajadorDAO.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAA2wC4AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T08:02:36.808Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Trabajadores.cs",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Modelos\\Trabajadores.cs",
+              "RelativeDocumentMoniker": "Modelos\\Trabajadores.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Modelos\\Trabajadores.cs",
+              "RelativeToolTip": "Modelos\\Trabajadores.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T07:56:34.905Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Form1.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Form1.cs",
+              "RelativeDocumentMoniker": "Form1.cs",
+              "ToolTip": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Form1.cs [Dise\u00F1o]",
+              "RelativeToolTip": "Form1.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T08:05:25.78Z",
+              "EditorCaption": " [Dise\u00F1o]"
             }
           ]
         },

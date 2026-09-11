@@ -1,6 +1,6 @@
 ﻿namespace Giovanny_Barbers
 {
-    partial class Form1
+    partial class Trabajadores
     {
         /// <summary>
         /// Required designer variable.
@@ -37,19 +37,19 @@
             textBoxTelefono = new TextBox();
             textBoxApellido = new TextBox();
             label5 = new Label();
-            dataGridView1 = new DataGridView();
+            dataGridViewTrabajadores = new DataGridView();
             buttonRegistro = new Button();
             label6 = new Label();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewTrabajadores).BeginInit();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 15F);
-            label1.Location = new Point(259, 99);
+            label1.Location = new Point(296, 132);
             label1.Name = "label1";
-            label1.Size = new Size(97, 28);
+            label1.Size = new Size(124, 35);
             label1.TabIndex = 0;
             label1.Text = "Nombres:";
             label1.Click += label1_Click;
@@ -58,9 +58,9 @@
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 15F);
-            label2.Location = new Point(259, 147);
+            label2.Location = new Point(296, 196);
             label2.Name = "label2";
-            label2.Size = new Size(98, 28);
+            label2.Size = new Size(123, 35);
             label2.TabIndex = 1;
             label2.Text = "Apellidos:";
             // 
@@ -68,9 +68,9 @@
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 15F);
-            label3.Location = new Point(267, 193);
+            label3.Location = new Point(305, 257);
             label3.Name = "label3";
-            label3.Size = new Size(90, 28);
+            label3.Size = new Size(115, 35);
             label3.TabIndex = 2;
             label3.Text = "Telefono:";
             // 
@@ -78,86 +78,94 @@
             // 
             label4.AutoSize = true;
             label4.Font = new Font("Segoe UI", 15F);
-            label4.Location = new Point(259, 237);
+            label4.Location = new Point(296, 316);
             label4.Name = "label4";
-            label4.Size = new Size(98, 28);
+            label4.Size = new Size(125, 35);
             label4.TabIndex = 3;
             label4.Text = "Direccion:";
             // 
             // textBoxNombre
             // 
-            textBoxNombre.Location = new Point(362, 104);
+            textBoxNombre.Location = new Point(414, 139);
+            textBoxNombre.Margin = new Padding(3, 4, 3, 4);
             textBoxNombre.Name = "textBoxNombre";
-            textBoxNombre.Size = new Size(210, 23);
+            textBoxNombre.Size = new Size(239, 27);
             textBoxNombre.TabIndex = 4;
             // 
             // textBoxDireccion
             // 
-            textBoxDireccion.Location = new Point(362, 242);
+            textBoxDireccion.Location = new Point(414, 323);
+            textBoxDireccion.Margin = new Padding(3, 4, 3, 4);
             textBoxDireccion.Name = "textBoxDireccion";
-            textBoxDireccion.Size = new Size(210, 23);
+            textBoxDireccion.Size = new Size(239, 27);
             textBoxDireccion.TabIndex = 5;
             // 
             // textBoxTelefono
             // 
-            textBoxTelefono.Location = new Point(362, 198);
+            textBoxTelefono.Location = new Point(414, 264);
+            textBoxTelefono.Margin = new Padding(3, 4, 3, 4);
             textBoxTelefono.Name = "textBoxTelefono";
-            textBoxTelefono.Size = new Size(210, 23);
+            textBoxTelefono.Size = new Size(239, 27);
             textBoxTelefono.TabIndex = 6;
             // 
             // textBoxApellido
             // 
-            textBoxApellido.Location = new Point(362, 152);
+            textBoxApellido.Location = new Point(414, 203);
+            textBoxApellido.Margin = new Padding(3, 4, 3, 4);
             textBoxApellido.Name = "textBoxApellido";
-            textBoxApellido.Size = new Size(210, 23);
+            textBoxApellido.Size = new Size(239, 27);
             textBoxApellido.TabIndex = 7;
             // 
             // label5
             // 
             label5.AutoSize = true;
             label5.Font = new Font("Segoe UI", 15F);
-            label5.Location = new Point(302, 44);
+            label5.Location = new Point(345, 59);
             label5.Name = "label5";
-            label5.Size = new Size(230, 28);
+            label5.Size = new Size(293, 35);
             label5.TabIndex = 8;
             label5.Text = "Registro de trabajadores.";
             // 
-            // dataGridView1
+            // dataGridViewTrabajadores
             // 
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(322, 414);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.Size = new Size(230, 150);
-            dataGridView1.TabIndex = 9;
+            dataGridViewTrabajadores.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewTrabajadores.Location = new Point(32, 552);
+            dataGridViewTrabajadores.Margin = new Padding(3, 4, 3, 4);
+            dataGridViewTrabajadores.Name = "dataGridViewTrabajadores";
+            dataGridViewTrabajadores.RowHeadersWidth = 51;
+            dataGridViewTrabajadores.Size = new Size(956, 200);
+            dataGridViewTrabajadores.TabIndex = 9;
             // 
             // buttonRegistro
             // 
             buttonRegistro.Font = new Font("Segoe UI", 15F);
-            buttonRegistro.Location = new Point(381, 304);
+            buttonRegistro.Location = new Point(435, 405);
+            buttonRegistro.Margin = new Padding(3, 4, 3, 4);
             buttonRegistro.Name = "buttonRegistro";
-            buttonRegistro.Size = new Size(131, 42);
+            buttonRegistro.Size = new Size(150, 56);
             buttonRegistro.TabIndex = 10;
             buttonRegistro.Text = "Registrar";
             buttonRegistro.UseVisualStyleBackColor = true;
+            buttonRegistro.Click += buttonRegistro_Click_1;
             // 
             // label6
             // 
             label6.AutoSize = true;
             label6.Font = new Font("Segoe UI", 15F);
-            label6.Location = new Point(322, 383);
+            label6.Location = new Point(368, 511);
             label6.Name = "label6";
-            label6.Size = new Size(230, 28);
+            label6.Size = new Size(295, 35);
             label6.TabIndex = 11;
             label6.Text = "Trabajadores registrados:";
             // 
-            // Form1
+            // Trabajadores
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(885, 595);
+            ClientSize = new Size(1011, 793);
             Controls.Add(label6);
             Controls.Add(buttonRegistro);
-            Controls.Add(dataGridView1);
+            Controls.Add(dataGridViewTrabajadores);
             Controls.Add(label5);
             Controls.Add(textBoxApellido);
             Controls.Add(textBoxTelefono);
@@ -167,10 +175,11 @@
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
-            Name = "Form1";
+            Margin = new Padding(3, 4, 3, 4);
+            Name = "Trabajadores";
             Text = "Trabajadores";
             Load += Form1_Load;
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewTrabajadores).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -186,7 +195,7 @@
         private TextBox textBoxTelefono;
         private TextBox textBoxApellido;
         private Label label5;
-        private DataGridView dataGridView1;
+        private DataGridView dataGridViewTrabajadores;
         private Button buttonRegistro;
         private Label label6;
     }

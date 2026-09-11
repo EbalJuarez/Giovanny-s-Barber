@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
+using Giovanny_Barbers;
 
 namespace Giovanny_Barbers
 {
@@ -8,12 +9,15 @@ namespace Giovanny_Barbers
     {
         public Login()
         {
+            Trabajadores formTrabajadores = new Trabajadores();
+            formTrabajadores.Show();
+            this.Hide();
             InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+            this.Hide();
         }
 
         private void label1_Click(object sender, EventArgs e)
