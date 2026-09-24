@@ -9,57 +9,58 @@ namespace Giovanny_Barbers
         public Login()
         {
             InitializeComponent();
+            AcceptButton = buttonInicion;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            
-        }
+        private void Form1_Load(object sender, EventArgs e) { }
+        private void label1_Click(object sender, EventArgs e) { }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-        }
-
-
-        private void buttonInicion_Click(object sender, EventArgs e)
+        private async void buttonInicion_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(maskedTextBoxUsuario.Text) || string.IsNullOrWhiteSpace(maskedTextBoxContrasena.Text))
             {
-                MessageBox.Show("Ingrese usuario y contraseÒa");
+                MessageBox.Show("Ingrese usuario y contrase√±a");
                 return;
             }
 
+            SesionUsuario? sesion;
+            buttonInicion.Enabled = false;
+            UseWaitCursor = true;
             try
             {
-                using (SqlConnection conn = ConexionBD.ObtenerConexion())
-                {
-                    string query = "SELECT rol FROM Usuario WHERE nombre_usuario = @usuario AND contrasena_hash = @contrasena";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@usuario", maskedTextBoxUsuario.Text.Trim());
-                        cmd.Parameters.AddWithValue("@contrasena", maskedTextBoxContrasena.Text);
-
-                        conn.Open();
-                        var resultado = cmd.ExecuteScalar();
-
-                        if (resultado != null)
-                        {
-                            string rol = resultado.ToString();
-                            MessageBox.Show($"Bienvenido. Rol: {rol}");
-                            
-                        }
-                        else
-                        {
-                            MessageBox.Show("Usuario o contraseÒa incorrectos");
-                            maskedTextBoxContrasena.Clear();
-                        }
-                    }
-                }
+                sesion = await ConexionBD.AutenticarAsync(maskedTextBoxUsuario.Text.Trim(), maskedTextBoxContrasena.Text);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al conectar con la base de datos: " + ex.Message);
+                if (!IsDisposed) MessageBox.Show(this, ex.Message, "No se pudo iniciar sesi√≥n", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            finally
+            {
+                if (!IsDisposed)
+                {
+                    buttonInicion.Enabled = true;
+                    UseWaitCursor = false;
+                }
+            }
+            if (IsDisposed) return;
+            if (sesion == null)
+            {
+                MessageBox.Show("Usuario o contrase√±a incorrectos");
+                maskedTextBoxContrasena.Clear();
+                return;
+            }
+            maskedTextBoxContrasena.Clear();
+            Hide();
+            try
+            {
+                using var principal = new Home(sesion);
+                principal.ShowDialog();
+            }
+            finally
+            {
+                Show();
+                maskedTextBoxContrasena.Focus();
             }
         }
     }
