@@ -1,6 +1,6 @@
-create database barberia
+create database GeovannysBarberDB
 
-use barberia
+use GeovannysBarberDB
 
 
 
@@ -171,3 +171,11 @@ CREATE TABLE Cuadre_Caja (
     estado VARCHAR(20),
     FOREIGN KEY (id_caja) REFERENCES Caja(id_caja)
 );
+
+CREATE TABLE dbo.RolModulo (
+    rol VARCHAR(30) NOT NULL,
+    modulo NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_RolModulo PRIMARY KEY (rol, modulo)
+);
+
+INSERT INTO RolModulo (rol, modulo) VALUES ('Trabajador', N'Mi jornada');

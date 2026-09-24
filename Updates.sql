@@ -1,3 +1,20 @@
+-- MIGRACIÓN RBAC para una base ya existente.
+-- Ejecute únicamente este bloque (hasta el siguiente comentario) en SQL Server.
+USE GeovannysBarberDB;
+GO
+IF OBJECT_ID(N'dbo.RolModulo', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.RolModulo (
+        rol VARCHAR(30) NOT NULL,
+        modulo NVARCHAR(50) NOT NULL,
+        CONSTRAINT PK_RolModulo PRIMARY KEY (rol, modulo)
+    );
+END;
+IF NOT EXISTS (SELECT 1 FROM dbo.RolModulo WHERE rol = 'Trabajador' AND modulo = N'Mi jornada')
+    INSERT INTO dbo.RolModulo (rol, modulo) VALUES ('Trabajador', N'Mi jornada');
+GO
+-- FIN MIGRACIÓN RBAC. No ejecute el resto del archivo para instalar permisos.
+
 USE barberia;
 
 
