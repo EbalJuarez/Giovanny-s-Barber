@@ -63,5 +63,10 @@ namespace Giovanny_Barbers
                 maskedTextBoxContrasena.Focus();
             }
         }
+
+        private void labelMarca_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

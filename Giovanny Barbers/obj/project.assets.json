@@ -1941,23 +1941,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Ebal\\.nuget\\packages\\": {},
+    "C:\\Users\\wilve\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Giovanny Barbers.csproj",
+      "projectUniqueName": "C:\\Users\\wilve\\Source\\Repos\\Giovanny-s-Barber\\Giovanny Barbers\\Giovanny Barbers.csproj",
       "projectName": "Giovanny Barbers",
-      "projectPath": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\Giovanny Barbers.csproj",
-      "packagesPath": "C:\\Users\\Ebal\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Ebal\\Documents\\GitHub\\Giovanny-s-Barber\\Giovanny Barbers\\obj\\",
+      "projectPath": "C:\\Users\\wilve\\Source\\Repos\\Giovanny-s-Barber\\Giovanny Barbers\\Giovanny Barbers.csproj",
+      "packagesPath": "C:\\Users\\wilve\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\wilve\\Source\\Repos\\Giovanny-s-Barber\\Giovanny Barbers\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Ebal\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\wilve\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -1966,6 +1966,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
