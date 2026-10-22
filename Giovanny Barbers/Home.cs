@@ -11,6 +11,7 @@ public partial class Home : Form
     private readonly Dictionary<Button, Color> coloresOriginales = new();
     private readonly Dictionary<string, ModuloView> vistas = new();
     private bool cargandoResumen;
+    private bool finalizandoSesion;
 
     // El diseñador usa este constructor: muestra los controles sin consultar SQL.
     public Home() { InitializeComponent(); }
@@ -124,6 +125,7 @@ public partial class Home : Form
                 : "Datos de hoy · Consulta el historial completo desde cada módulo.";
         }
         catch (OperationCanceledException) { }
+        catch (SesionInvalidaException ex) { FinalizarSesion(ex.Message); }
         catch (Exception ex)
         {
             if (!IsDisposed && !Disposing)
@@ -141,6 +143,15 @@ public partial class Home : Form
 
     private async void Actualizar_Click(object? sender, EventArgs e) => await ActualizarResumenAsync();
     private void CerrarSesion_Click(object? sender, EventArgs e) => Close();
+
+    // Varias vistas pueden detectar a la vez la sesión inválida; solo se avisa una vez.
+    internal void FinalizarSesion(string mensaje)
+    {
+        if (finalizandoSesion || IsDisposed || Disposing) return;
+        finalizandoSesion = true;
+        MessageBox.Show(this, mensaje, "Sesión finalizada", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        Close();
+    }
 
     private async void Home_Load(object sender, EventArgs e)
     {

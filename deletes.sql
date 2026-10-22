@@ -1,4 +1,5 @@
-USE barberia;
+USE GeovannysBarberDB;
+GO
 -- 1. eliminar el usuario de prueba
 DELETE FROM Usuario
 WHERE nombre_usuario = 'UsuarioPruebaDELETE';

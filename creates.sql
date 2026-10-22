@@ -1,12 +1,12 @@
-USE barberia;
+USE GeovannysBarberDB;
 
--- 1. Usuario
+-- 1. Usuario (las contraseñas se guardan con hash BCrypt; la aplicación rechaza claves en texto plano)
 INSERT INTO Usuario (nombre_usuario, contrasena_hash, rol, estado) VALUES
-('DonGio', 'Gato1979*#', 'Administrador', 'Activo'),
-('DonNoe', 'hash_noe123', 'Trabajador', 'Activo'),
-('Lis', 'hash_lis123', 'Cajera', 'Activo'),
-('Alex', 'hash_alex123', 'Trabajador', 'Inactivo'),
-('Willy', 'hash_willi123', 'Trabajador', 'Inactivo');
+('DonGio', '$2a$11$gNfzhyeyz8iz1UopwqlR4OGGCfG50QRTVAqNG/MM0zuvzcI5aKVsC', 'Administrador', 'Activo'),
+('DonNoe', '$2a$11$.LXWLQR/JYY5dFGiJl1l8u6F/onzzqRZUuVPbUcvndySBv3K8GBkS', 'Trabajador', 'Activo'),
+('Lis', '$2a$11$ZQARC8AodD.3jaOd39FMF.1hkN9lHy15rAEj.AH9PopSfeM8QfSkq', 'Cajera', 'Activo'),
+('Alex', '$2a$11$FzBcXB89jUUDkJuHdSF9JesJRgrCJWKXMNQ1DTHyHH6FBpUzhglwG', 'Trabajador', 'Inactivo'),
+('Willy', '$2a$11$0xSRU8yGwoBrVToadr8IqObMF30DiWf0ceCxAwxVuRwL5M6yjMTgq', 'Trabajador', 'Inactivo');
 
 -- 2. Trabajador
 INSERT INTO Trabajador (id_usuario, nombres, apellidos, telefono, direccion) VALUES

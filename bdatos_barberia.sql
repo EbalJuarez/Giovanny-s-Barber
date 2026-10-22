@@ -1,6 +1,8 @@
 create database GeovannysBarberDB
+GO
 
 use GeovannysBarberDB
+GO
 
 
 
@@ -9,7 +11,9 @@ CREATE TABLE Usuario (
     nombre_usuario VARCHAR(50),
     contrasena_hash VARCHAR(255),
     rol VARCHAR(30),
-    estado VARCHAR(20)
+    estado VARCHAR(20),
+    intentos_fallidos INT NOT NULL CONSTRAINT DF_Usuario_intentos_fallidos DEFAULT 0,
+    bloqueado_hasta DATETIME2 NULL
 );
 
 CREATE TABLE Trabajador (
@@ -19,6 +23,7 @@ CREATE TABLE Trabajador (
     apellidos VARCHAR(80),
     telefono VARCHAR(20),
     direccion VARCHAR(200),
+    salario DECIMAL(10,2) NULL,
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 CREATE TABLE Asistencia (
@@ -37,12 +42,26 @@ CREATE TABLE Prestamo (
     monto DECIMAL(10,2),
     saldo_pendiente DECIMAL(10,2),
     estado VARCHAR(20),
+    fecha_resolucion DATETIME2 NULL,
     FOREIGN KEY (id_trabajador) REFERENCES Trabajador(id_trabajador)
+);
+
+-- RF4: cada descuento aplicado al salario para abonar a un préstamo autorizado.
+CREATE TABLE Descuento_Prestamo (
+    id_descuento INT IDENTITY(1,1) PRIMARY KEY,
+    id_prestamo INT NOT NULL,
+    fecha DATETIME2 NOT NULL,
+    monto DECIMAL(10,2) NOT NULL CHECK (monto > 0),
+    observacion VARCHAR(100) NULL,
+    id_usuario INT NULL,
+    FOREIGN KEY (id_prestamo) REFERENCES Prestamo(id_prestamo),
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 
 CREATE TABLE Cliente (
     id_cliente INT IDENTITY(1,1) PRIMARY KEY,
     nombres VARCHAR(100),
+    nit VARCHAR(15) NOT NULL CONSTRAINT DF_Cliente_nit DEFAULT 'CF',
     telefono VARCHAR(20),
     correo VARCHAR(100)
 );
@@ -178,4 +197,8 @@ CREATE TABLE dbo.RolModulo (
     CONSTRAINT PK_RolModulo PRIMARY KEY (rol, modulo)
 );
 
-INSERT INTO RolModulo (rol, modulo) VALUES ('Trabajador', N'Mi jornada');
+-- El Administrador no necesita filas: tiene acceso a todos los módulos.
+INSERT INTO RolModulo (rol, modulo) VALUES
+    ('Trabajador', N'Mi jornada'),
+    ('Cajera', N'Clientes'), ('Cajera', N'Facturación'),
+    ('Cajero', N'Clientes'), ('Cajero', N'Facturación');
