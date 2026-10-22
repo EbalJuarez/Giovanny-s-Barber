@@ -84,6 +84,14 @@ IF COL_LENGTH(N'dbo.Cliente', N'nit') IS NULL
 GO
 -- FIN MIGRACIÓN MÓDULO CLIENTES.
 
+-- MIGRACIÓN CONSUMIDOR FINAL: cliente genérico para quien no quiere dar sus datos.
+USE GeovannysBarberDB;
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.Cliente WHERE nombres = 'Consumidor Final' AND nit = 'CF')
+    INSERT INTO dbo.Cliente (nombres, nit) VALUES ('Consumidor Final', 'CF');
+GO
+-- FIN MIGRACIÓN CONSUMIDOR FINAL.
+
 -- =====================================================================
 -- DATOS DE PRUEBA: cambios manuales sobre los registros de creates.sql.
 -- Solo para una base de pruebas; no los ejecute en la base real.

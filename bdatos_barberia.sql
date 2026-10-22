@@ -202,3 +202,6 @@ INSERT INTO RolModulo (rol, modulo) VALUES
     ('Trabajador', N'Mi jornada'),
     ('Cajera', N'Clientes'), ('Cajera', N'Facturación'),
     ('Cajero', N'Clientes'), ('Cajero', N'Facturación');
+
+-- Cliente genérico para quien no quiere dar sus datos.
+INSERT INTO Cliente (nombres, nit) VALUES ('Consumidor Final', 'CF');

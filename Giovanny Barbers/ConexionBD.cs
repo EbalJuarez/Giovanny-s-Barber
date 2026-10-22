@@ -208,7 +208,7 @@ public partial class ConexionBD
         ("Trabajadores", "Usuarios") => "SELECT id_usuario AS ID, nombre_usuario AS Usuario, rol AS Rol, estado AS Estado FROM dbo.Usuario ORDER BY nombre_usuario",
         ("Inventario", "Categorías") => "SELECT id_categoria AS ID, nombre AS Nombre, descripcion AS Descripción FROM dbo.Categoria ORDER BY nombre",
         ("Facturación", "Servicios") => "SELECT id_servicio AS ID, nombre AS Servicio, precio AS Precio, descripcion AS Descripción, categoria_servicio AS Categoría FROM dbo.Servicio ORDER BY nombre",
-        ("Facturación", "Pagos") => "SELECT p.id_pago AS ID, p.id_factura AS Factura, p.fecha AS Fecha, m.nombre AS Método, p.monto AS Monto, p.referencia AS Referencia, p.estado AS Estado FROM dbo.Pago p LEFT JOIN dbo.Metodo_Pago m ON m.id_metodo_pago=p.id_metodo_pago ORDER BY p.fecha DESC",
+        ("Facturación", "Pagos") => "SELECT p.id_pago AS ID, p.id_factura AS Factura, p.fecha AS Fecha, m.nombre AS Método, p.monto AS Monto, p.referencia AS Referencia, p.estado AS Estado FROM dbo.Pago p LEFT JOIN dbo.Metodo_Pago m ON m.id_metodo_pago=p.id_metodo_pago ORDER BY p.id_factura DESC, p.id_pago DESC",
         ("Contabilidad", "Cajas") => "SELECT id_caja AS ID, nombre AS Caja, estado AS Estado FROM dbo.Caja ORDER BY nombre",
         ("Trabajadores", "Asistencia") => "SELECT a.fecha AS Fecha, CONCAT(t.nombres,' ',t.apellidos) AS Trabajador, a.hora_entrada AS Entrada, a.hora_salida AS Salida FROM dbo.Asistencia a JOIN dbo.Trabajador t ON t.id_trabajador=a.id_trabajador ORDER BY a.fecha DESC",
         ("Mi jornada", "Mi asistencia") => "SELECT a.fecha AS Fecha, a.hora_entrada AS Entrada, a.hora_salida AS Salida FROM dbo.Asistencia a JOIN dbo.Trabajador t ON t.id_trabajador=a.id_trabajador WHERE t.id_usuario=@usuario ORDER BY a.fecha DESC",
@@ -277,6 +277,9 @@ public partial class ConexionBD
         "Empleado" or "Editar empleado" or "Clave" or "Servicio" or "Método de pago" => sesion.EsAdministrador,
         // CU-06 y RF4: solo el administrador resuelve préstamos y aplica descuentos al salario.
         "Resolver préstamo" or "Descuento" => sesion.EsAdministrador,
+        // Corrección de registros ya guardados: solo el administrador.
+        "Editar servicio" or "Editar categoría" or "Editar método de pago" or "Editar caja" or "Editar pago" or "Editar asistencia" or "Editar factura" => sesion.EsAdministrador,
+        _ when tipo.StartsWith("Eliminar ") => sesion.EsAdministrador,
         "Cliente" or "Editar cliente" => sesion.PuedeAbrir("Clientes"),
         "Producto" or "Editar producto" or "Categoría" or "Movimiento" => sesion.PuedeAbrir("Inventario"),
         "Transacción" or "Caja" or "Cierre" => sesion.PuedeAbrir("Contabilidad"),
@@ -289,7 +292,9 @@ public partial class ConexionBD
     public static async Task<List<OpcionRegistro>> OpcionesRegistroAsync(SesionUsuario sesion, string tipo, string catalogo)
     {
         if (!PuedeRegistrar(sesion, tipo)) throw new UnauthorizedAccessException("No tiene permiso para esta operación.");
-        string sql = (tipo, catalogo) switch
+        // Eliminar un registro usa la misma lista que su edición.
+        string origen = tipo.StartsWith("Eliminar ") ? "Editar " + tipo["Eliminar ".Length..] : tipo;
+        string sql = (origen, catalogo) switch
         {
             ("Empleado", "rol") => "SELECT 1 AS ID, 'Administrador' AS Nombre UNION ALL SELECT 2, 'Trabajador' UNION ALL SELECT 3, 'Cajera' UNION ALL SELECT 4, 'Cajero'",
             ("Clave", "usuario") => "SELECT id_usuario, nombre_usuario FROM dbo.Usuario ORDER BY nombre_usuario",
@@ -297,7 +302,7 @@ public partial class ConexionBD
             ("Resolver préstamo", "prestamo") => "SELECT p.id_prestamo, CONCAT('#',p.id_prestamo,' · ',t.nombres,' ',t.apellidos,' · Q ',p.monto,' · ',CONVERT(varchar(10),p.fecha_solicitud,103)) FROM dbo.Prestamo p JOIN dbo.Trabajador t ON t.id_trabajador=p.id_trabajador WHERE p.estado='Pendiente' ORDER BY p.fecha_solicitud",
             ("Descuento", "prestamo") => "SELECT p.id_prestamo, CONCAT('#',p.id_prestamo,' · ',t.nombres,' ',t.apellidos,' · Saldo Q ',p.saldo_pendiente,' · Salario ',COALESCE(CONCAT('Q ',t.salario),'sin registrar')) FROM dbo.Prestamo p JOIN dbo.Trabajador t ON t.id_trabajador=p.id_trabajador WHERE p.estado='Autorizado' AND p.saldo_pendiente>0 ORDER BY p.fecha_solicitud",
             ("Producto", "categoria") => "SELECT id_categoria, nombre FROM dbo.Categoria ORDER BY nombre",
-            ("Factura", "cliente") or ("Editar cliente", "cliente") => "SELECT id_cliente, CONCAT(nombres,' · NIT ',COALESCE(nit,'CF')) FROM dbo.Cliente ORDER BY nombres",
+            ("Factura", "cliente") or ("Editar cliente", "cliente") or ("Editar factura", "cliente") => "SELECT id_cliente, CONCAT(nombres,' · NIT ',COALESCE(nit,'CF')) FROM dbo.Cliente ORDER BY CASE WHEN nombres='Consumidor Final' AND nit='CF' THEN 0 ELSE 1 END, nombres",
             ("Factura", "producto") => "SELECT id_producto, nombre, precio_venta FROM dbo.Producto ORDER BY nombre",
             // CU-12: la existencia actual se muestra al elegir el producto del movimiento.
             ("Movimiento", "producto") => "SELECT id_producto, CONCAT(nombre,' · Existencia ',stock) FROM dbo.Producto ORDER BY nombre",
@@ -306,9 +311,19 @@ public partial class ConexionBD
             ("Factura", "servicio") => "SELECT id_servicio, nombre, precio FROM dbo.Servicio ORDER BY nombre",
             ("Factura", "trabajador") or ("Asistencia", "trabajador") or ("Préstamo", "trabajador") =>
                 "SELECT t.id_trabajador, CONCAT(t.nombres,' ',t.apellidos) FROM dbo.Trabajador t JOIN dbo.Usuario u ON u.id_usuario=t.id_usuario WHERE u.estado='Activo' AND (@todos=1 OR t.id_usuario=@usuario) ORDER BY t.nombres",
-            ("Pago", "factura") => "SELECT f.id_factura, CONCAT('Factura ',f.id_factura,' · Saldo Q ',f.total-COALESCE(p.pagado,0)) FROM dbo.Factura f OUTER APPLY (SELECT SUM(monto) AS pagado FROM dbo.Pago WHERE id_factura=f.id_factura AND estado='Completado') p WHERE f.estado<>'Anulada' AND f.total>COALESCE(p.pagado,0) ORDER BY f.id_factura DESC",
+            ("Pago", "factura") => "SELECT f.id_factura, CONCAT('Factura ',f.id_factura,' · Saldo Q ',f.total-COALESCE(p.pagado,0)), f.total-COALESCE(p.pagado,0) FROM dbo.Factura f OUTER APPLY (SELECT SUM(monto) AS pagado FROM dbo.Pago WHERE id_factura=f.id_factura AND estado='Completado') p WHERE f.estado<>'Anulada' AND f.total>COALESCE(p.pagado,0) ORDER BY f.id_factura DESC",
             ("Pago", "metodo") => "SELECT id_metodo_pago, nombre FROM dbo.Metodo_Pago WHERE estado='Activo' ORDER BY nombre",
             ("Pago", "caja") or ("Transacción", "caja") or ("Cierre", "caja") => "SELECT id_caja, nombre FROM dbo.Caja WHERE estado='Abierta' ORDER BY nombre",
+            ("Editar servicio", "servicio") => "SELECT id_servicio, CONCAT(nombre,' · Q ',precio) FROM dbo.Servicio ORDER BY nombre",
+            ("Editar categoría", "categoria") => "SELECT id_categoria, nombre FROM dbo.Categoria ORDER BY nombre",
+            ("Editar método de pago", "metodo") => "SELECT id_metodo_pago, CONCAT(nombre,' · ',COALESCE(estado,'Sin estado')) FROM dbo.Metodo_Pago ORDER BY nombre",
+            ("Editar caja", "caja") => "SELECT id_caja, CONCAT(nombre,' · ',COALESCE(estado,'Sin estado')) FROM dbo.Caja ORDER BY nombre",
+            ("Editar pago", "pago") => "SELECT p.id_pago, CONCAT('Pago ',p.id_pago,' · Factura ',p.id_factura,' · Q ',p.monto,' · ',COALESCE(m.nombre,'Sin método'),' · ',p.estado) FROM dbo.Pago p LEFT JOIN dbo.Metodo_Pago m ON m.id_metodo_pago=p.id_metodo_pago ORDER BY p.id_factura DESC, p.id_pago DESC",
+            ("Editar pago", "metodo") => "SELECT id_metodo_pago, nombre FROM dbo.Metodo_Pago ORDER BY nombre",
+            ("Editar asistencia", "asistencia") => "SELECT TOP (500) a.id_asistencia, CONCAT(CONVERT(varchar(10),a.fecha,103),' · ',t.nombres,' ',t.apellidos) FROM dbo.Asistencia a JOIN dbo.Trabajador t ON t.id_trabajador=a.id_trabajador ORDER BY a.fecha DESC, a.id_asistencia DESC",
+            ("Editar factura", "factura") => "SELECT f.id_factura, CONCAT('Factura ',f.id_factura,' · ',CONVERT(varchar(10),f.fecha,103),' · ',COALESCE(c.nombres,'Sin cliente'),' · Q ',f.total,' · ',f.estado) FROM dbo.Factura f LEFT JOIN dbo.Cliente c ON c.id_cliente=f.id_cliente ORDER BY f.id_factura DESC",
+            // Incluye trabajadores inactivos para no perder al que atendió una factura antigua.
+            ("Editar factura", "trabajador") => "SELECT id_trabajador, CONCAT(nombres,' ',apellidos) FROM dbo.Trabajador ORDER BY nombres",
             _ => throw new ArgumentException("Catálogo no permitido para esta operación.")
         };
         using var conexion = ObtenerConexion();
@@ -334,6 +349,13 @@ public partial class ConexionBD
             "Editar empleado" => "SELECT t.nombres, t.apellidos, t.telefono, t.direccion, t.salario, COALESCE(u.estado,'Activo') AS estado FROM dbo.Trabajador t LEFT JOIN dbo.Usuario u ON u.id_usuario=t.id_usuario WHERE t.id_trabajador=@id",
             "Editar cliente" => "SELECT nombres AS nombre, nit, telefono, correo FROM dbo.Cliente WHERE id_cliente=@id",
             "Editar producto" => "SELECT id_categoria AS categoria, nombre, precio_venta AS precio, stock_minimo AS minimo FROM dbo.Producto WHERE id_producto=@id",
+            "Editar servicio" => "SELECT nombre, precio, descripcion, categoria_servicio AS categoria FROM dbo.Servicio WHERE id_servicio=@id",
+            "Editar categoría" => "SELECT nombre, descripcion FROM dbo.Categoria WHERE id_categoria=@id",
+            "Editar método de pago" => "SELECT nombre, estado FROM dbo.Metodo_Pago WHERE id_metodo_pago=@id",
+            "Editar caja" => "SELECT nombre, estado FROM dbo.Caja WHERE id_caja=@id",
+            "Editar pago" => "SELECT id_metodo_pago AS metodo, referencia FROM dbo.Pago WHERE id_pago=@id",
+            "Editar asistencia" => "SELECT CONVERT(varchar(5),hora_entrada,108) AS entrada, CONVERT(varchar(5),hora_salida,108) AS salida FROM dbo.Asistencia WHERE id_asistencia=@id",
+            "Editar factura" => "SELECT id_cliente AS cliente, id_trabajador AS trabajador, CASE WHEN estado='Anulada' THEN 'Anulada' ELSE 'Vigente' END AS estado FROM dbo.Factura WHERE id_factura=@id",
             _ => throw new ArgumentException("Operación sin edición.")
         };
         using var conexion = ObtenerConexion();
@@ -423,6 +445,15 @@ public partial class ConexionBD
                 throw new InvalidOperationException("Seleccione una caja abierta.");
             if (await Escalar("SELECT TOP (1) id_cuadre FROM dbo.Cuadre_Caja WHERE id_caja=@id AND CAST(fecha_cierre AS date)=CAST(GETDATE() AS date)", ("@id",id)) != null)
                 throw new InvalidOperationException("Esta caja ya tiene un cierre registrado hoy.");
+        }
+        // Un registro con movimientos relacionados no se elimina, para no dejar datos huérfanos.
+        async Task SinUso(string sql, int id, string mensaje)
+        {
+            if (await Escalar(sql, ("@id", id)) != null) throw new InvalidOperationException(mensaje);
+        }
+        async Task Borrar(string sql, int id, string noExiste)
+        {
+            if (await Ejecutar(sql, ("@id", id)) != 1) throw new InvalidOperationException(noExiste);
         }
         // Sección 8.3: el NIT es opcional; sin NIT el cliente se registra como consumidor final (CF).
         string Nit()
@@ -520,6 +551,140 @@ public partial class ConexionBD
                     await ValidarNitLibre(nitEditado, clienteEditado);
                     if (await Ejecutar("UPDATE dbo.Cliente SET nombres=@nombre,nit=@nit,telefono=@telefono,correo=@correo WHERE id_cliente=@id", ("@nombre",Texto("nombre",100)), ("@nit",nitEditado), ("@telefono",Texto("telefono",20,false)), ("@correo",Correo()), ("@id",clienteEditado)) != 1)
                         throw new InvalidOperationException("El cliente ya no existe.");
+                    break;
+                case "Editar servicio":
+                    if (await Ejecutar("UPDATE dbo.Servicio SET nombre=@nombre,precio=@precio,descripcion=@descripcion,categoria_servicio=@categoria WHERE id_servicio=@id", ("@nombre",Texto("nombre",100)), ("@precio",Numero("precio",0.01m)), ("@descripcion",Texto("descripcion",250,false)), ("@categoria",Texto("categoria",80)), ("@id",Entero("servicio"))) != 1)
+                        throw new InvalidOperationException("El servicio ya no existe.");
+                    break;
+                case "Editar categoría":
+                    if (await Ejecutar("UPDATE dbo.Categoria SET nombre=@nombre,descripcion=@descripcion WHERE id_categoria=@id", ("@nombre",Texto("nombre",80)), ("@descripcion",Texto("descripcion",250,false)), ("@id",Entero("categoria"))) != 1)
+                        throw new InvalidOperationException("La categoría ya no existe.");
+                    break;
+                case "Editar método de pago":
+                    string estadoMetodo = Texto("estado",20);
+                    if (estadoMetodo is not ("Activo" or "Inactivo")) throw new ArgumentException("Estado no válido.");
+                    if (await Ejecutar("UPDATE dbo.Metodo_Pago SET nombre=@nombre,estado=@estado WHERE id_metodo_pago=@id", ("@nombre",Texto("nombre",50)), ("@estado",estadoMetodo), ("@id",Entero("metodo"))) != 1)
+                        throw new InvalidOperationException("El método de pago ya no existe.");
+                    break;
+                case "Editar caja":
+                    string estadoCaja = Texto("estado",20);
+                    if (estadoCaja is not ("Abierta" or "Cerrada")) throw new ArgumentException("Estado no válido.");
+                    if (await Ejecutar("UPDATE dbo.Caja SET nombre=@nombre,estado=@estado WHERE id_caja=@id", ("@nombre",Texto("nombre",80)), ("@estado",estadoCaja), ("@id",Entero("caja"))) != 1)
+                        throw new InvalidOperationException("La caja ya no existe.");
+                    break;
+                case "Editar pago":
+                    // El monto no se edita para no descuadrar la caja; solo el método y la referencia.
+                    if (await Escalar("SELECT id_metodo_pago FROM dbo.Metodo_Pago WHERE id_metodo_pago=@id", ("@id",Entero("metodo"))) == null) throw new InvalidOperationException("Seleccione un método de pago.");
+                    if (await Ejecutar("UPDATE dbo.Pago SET id_metodo_pago=@metodo,referencia=@referencia WHERE id_pago=@id", ("@metodo",Entero("metodo")), ("@referencia",Texto("referencia",100,false)), ("@id",Entero("pago"))) != 1)
+                        throw new InvalidOperationException("El pago ya no existe.");
+                    break;
+                case "Editar asistencia":
+                    TimeSpan Hora(string campo, bool requerido)
+                    {
+                        string texto = Texto(campo,5,requerido);
+                        if (texto.Length == 0) return TimeSpan.MinValue;
+                        if (!TimeSpan.TryParseExact(texto, @"h\:mm", System.Globalization.CultureInfo.InvariantCulture, out var hora) || hora >= TimeSpan.FromDays(1))
+                            throw new ArgumentException($"Escriba la hora de {campo} como HH:mm (por ejemplo 08:30).");
+                        return hora;
+                    }
+                    TimeSpan entrada = Hora("entrada",true), salida = Hora("salida",false);
+                    if (salida != TimeSpan.MinValue && salida < entrada) throw new ArgumentException("La salida no puede ser antes de la entrada.");
+                    if (await Ejecutar("UPDATE dbo.Asistencia SET hora_entrada=@entrada,hora_salida=@salida WHERE id_asistencia=@id", ("@entrada",entrada), ("@salida",salida == TimeSpan.MinValue ? DBNull.Value : (object)salida), ("@id",Entero("asistencia"))) != 1)
+                        throw new InvalidOperationException("El registro de asistencia ya no existe.");
+                    break;
+                case "Editar factura":
+                    int facturaEditada = Entero("factura");
+                    string estadoFactura = Texto("estado",20);
+                    if (estadoFactura is not ("Vigente" or "Anulada")) throw new ArgumentException("Estado no válido.");
+                    object? estadoActual = await Escalar("SELECT estado FROM dbo.Factura WITH (UPDLOCK) WHERE id_factura=@id", ("@id",facturaEditada));
+                    if (estadoActual == null) throw new InvalidOperationException("La factura ya no existe.");
+                    bool yaAnulada = (string)estadoActual == "Anulada";
+                    if (yaAnulada && estadoFactura == "Vigente") throw new InvalidOperationException("Una factura anulada no se puede reactivar. Emita una nueva.");
+                    if (await Escalar("SELECT id_cliente FROM dbo.Cliente WHERE id_cliente=@id", ("@id",Entero("cliente"))) == null) throw new InvalidOperationException("Seleccione un cliente.");
+                    if (await Escalar("SELECT id_trabajador FROM dbo.Trabajador WHERE id_trabajador=@id", ("@id",Entero("trabajador"))) == null) throw new InvalidOperationException("Seleccione un trabajador.");
+                    await Ejecutar("UPDATE dbo.Factura SET id_cliente=@cliente,id_trabajador=@trabajador WHERE id_factura=@id", ("@cliente",Entero("cliente")), ("@trabajador",Entero("trabajador")), ("@id",facturaEditada));
+                    if (!yaAnulada && estadoFactura == "Anulada")
+                    {
+                        // Al anular: los productos vuelven al inventario y cada pago se devuelve con un egreso en su caja.
+                        await Ejecutar("UPDATE p SET stock=p.stock+d.cantidad FROM dbo.Producto p JOIN (SELECT id_producto, SUM(cantidad) AS cantidad FROM dbo.Detalle_Producto WHERE id_factura=@id GROUP BY id_producto) d ON d.id_producto=p.id_producto", ("@id",facturaEditada));
+                        await Ejecutar("INSERT INTO dbo.Movimiento_Inventario(id_producto,tipo,cantidad,fecha,motivo) SELECT id_producto,'Entrada',SUM(cantidad),GETDATE(),@motivo FROM dbo.Detalle_Producto WHERE id_factura=@id GROUP BY id_producto", ("@motivo","Anulación factura " + facturaEditada), ("@id",facturaEditada));
+                        await Ejecutar("INSERT INTO dbo.Movimiento_Contable(id_caja,id_pago,tipo,concepto,monto,fecha) SELECT m.id_caja,p.id_pago,'Egreso',@concepto,p.monto,GETDATE() FROM dbo.Pago p JOIN dbo.Movimiento_Contable m ON m.id_pago=p.id_pago AND m.tipo='Ingreso' WHERE p.id_factura=@id AND p.estado='Completado'", ("@concepto","Devolución factura anulada " + facturaEditada), ("@id",facturaEditada));
+                        await Ejecutar("UPDATE dbo.Pago SET estado='Anulado' WHERE id_factura=@id AND estado='Completado'", ("@id",facturaEditada));
+                        await Ejecutar("UPDATE dbo.Factura SET estado='Anulada' WHERE id_factura=@id", ("@id",facturaEditada));
+                    }
+                    break;
+                case "Eliminar empleado":
+                    int empleadoBorrado = Entero("trabajador");
+                    object? cuentaBorrada = await Escalar("SELECT COALESCE(id_usuario,0) FROM dbo.Trabajador WITH (UPDLOCK) WHERE id_trabajador=@id", ("@id",empleadoBorrado));
+                    if (cuentaBorrada == null) throw new InvalidOperationException("El trabajador ya no existe.");
+                    int idCuentaBorrada = Convert.ToInt32(cuentaBorrada);
+                    if (idCuentaBorrada == sesion.IdUsuario) throw new InvalidOperationException("No puede eliminar su propia cuenta.");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Factura WHERE id_trabajador=@id UNION ALL SELECT TOP (1) 1 FROM dbo.Asistencia WHERE id_trabajador=@id UNION ALL SELECT TOP (1) 1 FROM dbo.Prestamo WHERE id_trabajador=@id", empleadoBorrado,
+                        "El trabajador tiene facturas, asistencia o préstamos registrados. Desactívelo con Editar empleado.");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Descuento_Prestamo WHERE id_usuario=@id", idCuentaBorrada, "El usuario registró descuentos de salario. Desactívelo con Editar empleado.");
+                    await Ejecutar("DELETE FROM dbo.Trabajador WHERE id_trabajador=@id", ("@id",empleadoBorrado));
+                    await Ejecutar("DELETE FROM dbo.Usuario WHERE id_usuario=@id", ("@id",idCuentaBorrada));
+                    break;
+                case "Eliminar cliente":
+                    int clienteBorrado = Entero("cliente");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Cliente WHERE id_cliente=@id AND nombres='Consumidor Final' AND nit='CF'", clienteBorrado, "Consumidor Final es el cliente genérico y no se puede eliminar.");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Factura WHERE id_cliente=@id", clienteBorrado, "El cliente tiene facturas registradas y no se puede eliminar.");
+                    await Borrar("DELETE FROM dbo.Cliente WHERE id_cliente=@id", clienteBorrado, "El cliente ya no existe.");
+                    break;
+                case "Eliminar producto":
+                    int productoBorrado = Entero("producto");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Detalle_Producto WHERE id_producto=@id", productoBorrado, "El producto ya se vendió en alguna factura y no se puede eliminar.");
+                    await Ejecutar("DELETE FROM dbo.Movimiento_Inventario WHERE id_producto=@id", ("@id",productoBorrado));
+                    await Borrar("DELETE FROM dbo.Producto WHERE id_producto=@id", productoBorrado, "El producto ya no existe.");
+                    break;
+                case "Eliminar categoría":
+                    int categoriaBorrada = Entero("categoria");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Producto WHERE id_categoria=@id", categoriaBorrada, "La categoría tiene productos. Cámbielos de categoría o elimínelos primero.");
+                    await Borrar("DELETE FROM dbo.Categoria WHERE id_categoria=@id", categoriaBorrada, "La categoría ya no existe.");
+                    break;
+                case "Eliminar servicio":
+                    int servicioBorrado = Entero("servicio");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Detalle_Servicio WHERE id_servicio=@id", servicioBorrado, "El servicio ya se cobró en alguna factura y no se puede eliminar.");
+                    await Borrar("DELETE FROM dbo.Servicio WHERE id_servicio=@id", servicioBorrado, "El servicio ya no existe.");
+                    break;
+                case "Eliminar método de pago":
+                    int metodoBorrado = Entero("metodo");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Pago WHERE id_metodo_pago=@id", metodoBorrado, "El método tiene pagos registrados. Desactívelo con Editar método de pago.");
+                    await Borrar("DELETE FROM dbo.Metodo_Pago WHERE id_metodo_pago=@id", metodoBorrado, "El método de pago ya no existe.");
+                    break;
+                case "Eliminar caja":
+                    int cajaBorrada = Entero("caja");
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Movimiento_Contable WHERE id_caja=@id UNION ALL SELECT TOP (1) 1 FROM dbo.Cuadre_Caja WHERE id_caja=@id", cajaBorrada, "La caja tiene movimientos o cierres. Ciérrela con Editar caja.");
+                    await Borrar("DELETE FROM dbo.Caja WHERE id_caja=@id", cajaBorrada, "La caja ya no existe.");
+                    break;
+                case "Eliminar asistencia":
+                    await Borrar("DELETE FROM dbo.Asistencia WHERE id_asistencia=@id", Entero("asistencia"), "El registro de asistencia ya no existe.");
+                    break;
+                case "Eliminar pago":
+                    // Se quita el pago con su ingreso en caja; la factura vuelve a tener saldo pendiente.
+                    int pagoBorrado = Entero("pago");
+                    object? facturaDelPago = await Escalar("SELECT id_factura FROM dbo.Pago WITH (UPDLOCK) WHERE id_pago=@id", ("@id",pagoBorrado));
+                    if (facturaDelPago == null) throw new InvalidOperationException("El pago ya no existe.");
+                    await Ejecutar("DELETE FROM dbo.Transaccion_POS WHERE id_pago=@id", ("@id",pagoBorrado));
+                    await Ejecutar("DELETE FROM dbo.Movimiento_Contable WHERE id_pago=@id", ("@id",pagoBorrado));
+                    await Ejecutar("DELETE FROM dbo.Pago WHERE id_pago=@id", ("@id",pagoBorrado));
+                    if (facturaDelPago != DBNull.Value) await Ejecutar("UPDATE dbo.Factura SET estado='Emitida' WHERE id_factura=@id AND estado='Pagada'", ("@id",facturaDelPago));
+                    break;
+                case "Eliminar factura":
+                    // Se quita la factura con su detalle, pagos y movimientos; los productos vuelven al inventario.
+                    int facturaBorrada = Entero("factura");
+                    object? estadoBorrada = await Escalar("SELECT estado FROM dbo.Factura WITH (UPDLOCK) WHERE id_factura=@id", ("@id",facturaBorrada));
+                    if (estadoBorrada == null) throw new InvalidOperationException("La factura ya no existe.");
+                    // Una factura anulada ya devolvió sus productos al anularse.
+                    if (Convert.ToString(estadoBorrada) != "Anulada")
+                        await Ejecutar("UPDATE p SET stock=p.stock+d.cantidad FROM dbo.Producto p JOIN (SELECT id_producto, SUM(cantidad) AS cantidad FROM dbo.Detalle_Producto WHERE id_factura=@id GROUP BY id_producto) d ON d.id_producto=p.id_producto", ("@id",facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Movimiento_Inventario WHERE motivo IN (@venta,@anulacion)", ("@venta","Factura " + facturaBorrada), ("@anulacion","Anulación factura " + facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Transaccion_POS WHERE id_pago IN (SELECT id_pago FROM dbo.Pago WHERE id_factura=@id)", ("@id",facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Movimiento_Contable WHERE id_pago IN (SELECT id_pago FROM dbo.Pago WHERE id_factura=@id)", ("@id",facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Pago WHERE id_factura=@id", ("@id",facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Detalle_Producto WHERE id_factura=@id", ("@id",facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Detalle_Servicio WHERE id_factura=@id", ("@id",facturaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Factura WHERE id_factura=@id", ("@id",facturaBorrada));
                     break;
                 case "Categoría":
                     await Ejecutar("INSERT INTO dbo.Categoria(nombre,descripcion) VALUES(@nombre,@descripcion)", ("@nombre",Texto("nombre",80)), ("@descripcion",Texto("descripcion",250,false)));

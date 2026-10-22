@@ -1,5 +1,8 @@
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace Giovanny_Barbers;
 
@@ -12,6 +15,43 @@ public static class ComprobanteTermico
     private const string Fuente = "Consolas";
     private const float TamanoFuente = 7.5f;
     private static readonly CultureInfo Cultura = CultureInfo.GetCultureInfo("es-GT");
+    private static readonly Lazy<Bitmap?> logo = new(CargarLogo);
+
+    // Logo del encabezado (Logo .jpeg incrustado en el programa); null si no se pudo cargar.
+    public static Image? Logo => logo.Value;
+
+    // Recorta el margen blanco de la imagen y la deja en blanco y negro puro para que la térmica la imprima nítida.
+    private static Bitmap? CargarLogo()
+    {
+        using var flujo = typeof(ComprobanteTermico).Assembly.GetManifestResourceStream("Logo.jpeg");
+        if (flujo == null) return null;
+        using var original = new Bitmap(flujo);
+        int w = original.Width, h = original.Height;
+        var pixeles = new int[w * h];
+        var datos = original.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        Marshal.Copy(datos.Scan0, pixeles, 0, pixeles.Length);
+        original.UnlockBits(datos);
+        static bool Oscuro(int p) => ((p >> 16) & 255) + ((p >> 8) & 255) + (p & 255) < 384;
+        int izquierda = w, derecha = -1, arriba = h, abajo = -1;
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                if (Oscuro(pixeles[y * w + x]))
+                {
+                    izquierda = Math.Min(izquierda, x); derecha = Math.Max(derecha, x);
+                    arriba = Math.Min(arriba, y); abajo = Math.Max(abajo, y);
+                }
+        if (derecha < 0) return null;
+        int ancho = derecha - izquierda + 1, alto = abajo - arriba + 1;
+        var recorte = new int[ancho * alto];
+        for (int y = 0; y < alto; y++)
+            for (int x = 0; x < ancho; x++)
+                recorte[y * ancho + x] = Oscuro(pixeles[(y + arriba) * w + x + izquierda]) ? Color.Black.ToArgb() : Color.White.ToArgb();
+        var resultado = new Bitmap(ancho, alto, PixelFormat.Format32bppArgb);
+        datos = resultado.LockBits(new Rectangle(0, 0, ancho, alto), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+        Marshal.Copy(recorte, 0, datos.Scan0, recorte.Length);
+        resultado.UnlockBits(datos);
+        return resultado;
+    }
 
     public static List<string> Lineas(Comprobante c, bool reimpresion)
     {
@@ -35,7 +75,8 @@ public static class ComprobanteTermico
         }
         string Moneda(decimal monto) => "Q " + monto.ToString("N2", Cultura);
 
-        Centrado((config["Comercio"] is { Length: > 0 } comercio ? comercio : "Giovannys Barber").ToUpper(Cultura));
+        // El nombre solo se imprime como texto si falta el logo, que ya lo incluye.
+        if (Logo == null) Centrado((config["Comercio"] is { Length: > 0 } comercio ? comercio : "Geovanny's Barber Shop").ToUpper(Cultura));
         // PENDIENTE: completar la dirección y el teléfono del comercio en appsettings.json (sección "Comprobante").
         // Mientras estén vacíos, esas líneas no se imprimen.
         Centrado(config["Direccion"]);
@@ -92,7 +133,7 @@ public static class ComprobanteTermico
     // Usa la impresora de appsettings.json; si no está configurada o no se encuentra, permite elegirla.
     public static bool Imprimir(IReadOnlyList<string> lineas, IWin32Window ventana)
     {
-        using var documento = new PrintDocument { DocumentName = "Comprobante Giovannys Barber" };
+        using var documento = new PrintDocument { DocumentName = "Comprobante Geovanny's Barber Shop" };
         string? impresora = ConexionBD.Configuracion("Comprobante")["Impresora"];
         if (!string.IsNullOrWhiteSpace(impresora) && PrinterSettings.InstalledPrinters.Cast<string>().Contains(impresora))
             documento.PrinterSettings.PrinterName = impresora;
@@ -105,17 +146,40 @@ public static class ComprobanteTermico
         using var fuente = new Font(Fuente, TamanoFuente);
         // Con la unidad de página predeterminada (centésimas de pulgada), 58 mm equivalen a 228.
         float altoLinea = fuente.GetHeight(100f);
-        documento.DefaultPageSettings.PaperSize = new PaperSize("Ticket 58 mm", 228, (int)Math.Ceiling(lineas.Count * altoLinea) + 20);
+        // El driver de la SAT Q15 U imprime 48 mm de ancho (189): se pide un papel de ese ancho y del largo del
+        // comprobante, porque sus papeles fijos (297 mm o más) avanzan el resto del papel en blanco.
+        int ancho = documento.PrinterSettings.PaperSizes.Cast<PaperSize>()
+            .Select(p => p.Width)
+            .Where(w => w <= 228)
+            .DefaultIfEmpty(228)
+            .Max();
+        // El logo ocupa todo el ancho del papel, seguido de media línea de separación.
+        var imagen = Logo;
+        float altoLogo = imagen == null ? 0 : (float)ancho * imagen.Height / imagen.Width + altoLinea / 2;
+        // Margen extra (unos 2.5 cm): con el alto justo, la impresora cortaba las últimas líneas.
+        int alto = (int)Math.Ceiling(altoLogo + lineas.Count * altoLinea) + 100;
+        documento.DefaultPageSettings.PaperSize = new PaperSize("Ticket", ancho, alto);
         documento.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+        int siguiente = 0;
+        bool primeraPagina = true;
         documento.PrintPage += (_, e) =>
         {
+            var g = e.Graphics!;
             float y = 0;
-            foreach (string linea in lineas)
+            if (primeraPagina && imagen != null)
             {
-                e.Graphics!.DrawString(linea, fuente, Brushes.Black, 0, y, StringFormat.GenericTypographic);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(imagen, 0, 0, ancho, altoLogo - altoLinea / 2);
+                y = altoLogo;
+            }
+            primeraPagina = false;
+            // Si la página resulta más corta que el comprobante, las líneas restantes siguen en otra página en vez de perderse.
+            for (; siguiente < lineas.Count && (y == 0 || y + altoLinea <= e.PageSettings.PrintableArea.Height); siguiente++)
+            {
+                g.DrawString(lineas[siguiente], fuente, Brushes.Black, 0, y, StringFormat.GenericTypographic);
                 y += altoLinea;
             }
-            e.HasMorePages = false;
+            e.HasMorePages = siguiente < lineas.Count;
         };
         documento.Print();
         return true;
@@ -154,7 +218,13 @@ public sealed class ComprobanteForm : Form
         estructura.RowStyles.Add(new RowStyle(SizeType.Percent,100));
         estructura.RowStyles.Add(new RowStyle(SizeType.Absolute,95));
         Controls.Add(estructura);
-        estructura.Controls.Add(vista,0,0);
+        // El logo se muestra encima del texto, como sale en el papel.
+        var contenido = new Panel { Dock = DockStyle.Fill, BackColor = Color.White };
+        contenido.Controls.Add(vista);
+        if (ComprobanteTermico.Logo is { } logo)
+            contenido.Controls.Add(new PictureBox { Image = logo, SizeMode = PictureBoxSizeMode.Zoom, Dock = DockStyle.Top, Height = 110, Padding = new Padding(8) });
+        vista.BringToFront();
+        estructura.Controls.Add(contenido,0,0);
         var pie = new Panel { Dock = DockStyle.Fill };
         var botones = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 45, FlowDirection = FlowDirection.RightToLeft };
         var cerrar = new Button { Text = "Cerrar", Width = 120, Height = 40, DialogResult = DialogResult.Cancel };
@@ -177,6 +247,12 @@ public sealed class ComprobanteForm : Form
             if (IsDisposed) return;
             lineas = ComprobanteTermico.Lineas(comprobante, reimpresion);
             vista.Lines = lineas.ToArray();
+            // Una factura vigente se imprime hasta que tiene un pago registrado.
+            if (comprobante.Pagado == 0 && !string.Equals(comprobante.Estado, "Anulada", StringComparison.OrdinalIgnoreCase))
+            {
+                estado.Text = "Registra el pago de la factura en la pestaña Pagos para poder imprimir.";
+                return;
+            }
             estado.Text = reimpresion ? "Reimpresión del comprobante." : "Revisa el comprobante antes de imprimir.";
             imprimir.Enabled = true;
             imprimir.Focus();

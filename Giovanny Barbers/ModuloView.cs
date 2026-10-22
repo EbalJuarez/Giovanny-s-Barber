@@ -53,7 +53,7 @@ public sealed class ModuloView : UserControl
             cabecera.Controls.Add(actualizar);
             foreach (string operacion in Operaciones(modulo, seccion).Where(tipo => ConexionBD.PuedeRegistrar(Sesion, tipo)))
             {
-                var nuevo = new Button { Text = RegistroForm.EsAccion(operacion) ? RegistroForm.Titulo(operacion) : "+ " + operacion, Dock = DockStyle.Right, Width = 170 };
+                var nuevo = new Button { Text = RegistroForm.EsAccion(operacion) ? RegistroForm.Titulo(operacion) : "+ " + operacion, Dock = DockStyle.Right, AutoSize = true, MinimumSize = new Size(110, 0), Padding = new Padding(6, 0, 6, 0) };
                 cabecera.Controls.Add(nuevo);
                 nuevo.Click += async (_, _) =>
                 {
@@ -61,9 +61,7 @@ public sealed class ModuloView : UserControl
                     var resultado = ventana.ShowDialog(FindForm());
                     if (resultado == DialogResult.OK)
                     {
-                        if (ventana.FacturaEmitida is int emitida &&
-                            MessageBox.Show(FindForm(), $"Factura {emitida} emitida. ¿Desea ver e imprimir el comprobante?", "Comprobante", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                            AbrirComprobante(emitida, false);
+                        if (ventana.FacturaEmitida is int emitida) CobrarFactura(emitida);
                         await ActualizarAsync();
                     }
                     else if (ventana.SesionFinalizada != null) (FindForm() as Home)?.FinalizarSesion(ventana.SesionFinalizada);
@@ -156,6 +154,21 @@ public sealed class ModuloView : UserControl
             return;
         }
         AbrirComprobante(numero, true);
+    }
+
+    // Tras emitir una factura se registra su pago, y el comprobante se ofrece hasta que el pago queda guardado.
+    private void CobrarFactura(int factura)
+    {
+        if (!ConexionBD.PuedeRegistrar(Sesion, "Pago")) return;
+        using var pago = new RegistroForm(Sesion, "Pago", factura);
+        var resultado = pago.ShowDialog(FindForm());
+        if (resultado == DialogResult.OK)
+        {
+            if (MessageBox.Show(FindForm(), $"Pago de la factura {factura} registrado. ¿Desea ver e imprimir el comprobante?", "Comprobante", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                AbrirComprobante(factura, false);
+        }
+        else if (pago.SesionFinalizada != null) (FindForm() as Home)?.FinalizarSesion(pago.SesionFinalizada);
+        else MessageBox.Show(FindForm(), $"La factura {factura} quedó pendiente de pago. Regístralo en la pestaña Pagos para imprimir el comprobante.", "Pago pendiente", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void AbrirComprobante(int factura, bool reimpresion)
@@ -300,22 +313,24 @@ public sealed class ModuloView : UserControl
 
     private static string[] Operaciones(string modulo, string seccion) => (modulo, seccion) switch
     {
-        ("Trabajadores", "Directorio") => ["Empleado", "Editar empleado"],
+        ("Trabajadores", "Directorio") => ["Empleado", "Editar empleado", "Eliminar empleado"],
         ("Trabajadores", "Usuarios") => ["Clave"],
-        ("Trabajadores", "Asistencia") or ("Mi jornada", "Mi asistencia") => ["Asistencia"],
+        ("Trabajadores", "Asistencia") => ["Asistencia", "Editar asistencia", "Eliminar asistencia"],
+        ("Mi jornada", "Mi asistencia") => ["Asistencia", "Editar asistencia", "Eliminar asistencia"],
         ("Trabajadores", "Préstamos") => ["Préstamo", "Resolver préstamo", "Descuento"],
         ("Trabajadores", "Descuentos") => ["Descuento"],
         ("Mi jornada", "Mis préstamos") => ["Préstamo"],
-        ("Clientes", "Clientes") => ["Cliente", "Editar cliente"],
-        ("Inventario", "Productos") => ["Producto", "Editar producto"],
+        ("Clientes", "Clientes") => ["Cliente", "Editar cliente", "Eliminar cliente"],
+        ("Inventario", "Productos") => ["Producto", "Editar producto", "Eliminar producto"],
         ("Inventario", "Movimientos") => ["Movimiento"],
-        ("Inventario", "Categorías") => ["Categoría"],
-        ("Facturación", "Servicios") => ["Servicio"],
-        ("Facturación", "Pagos") => ["Pago", "Método de pago"],
+        ("Inventario", "Categorías") => ["Categoría", "Editar categoría", "Eliminar categoría"],
+        ("Facturación", "Servicios") => ["Servicio", "Editar servicio", "Eliminar servicio"],
+        ("Facturación", "Pagos") => ["Pago", "Método de pago", "Editar pago", "Editar método de pago", "Eliminar pago", "Eliminar método de pago"],
+        ("Facturación", "Facturas") => ["Factura", "Editar factura", "Eliminar factura"],
         ("Contabilidad", "Ingresos y egresos") => ["Transacción"],
-        ("Contabilidad", "Cajas") => ["Caja"],
+        ("Contabilidad", "Cajas") => ["Caja", "Editar caja", "Eliminar caja"],
         ("Contabilidad", "Cuadre de caja") or ("Contabilidad", "Cierres diarios") => ["Cierre"],
-        ("Facturación", "Facturas") or ("Facturación", "Detalle de factura") or ("Trabajadores", "Actividades") or ("Clientes", "Historial") or ("Mi jornada", "Mis servicios") or ("Mi jornada", "Mis ventas") => ["Factura"],
+        ("Facturación", "Detalle de factura") or ("Trabajadores", "Actividades") or ("Clientes", "Historial") or ("Mi jornada", "Mis servicios") or ("Mi jornada", "Mis ventas") => ["Factura"],
         _ => []
     };
 
@@ -356,12 +371,15 @@ public sealed class RegistroForm : Form
     private readonly NumericUpDown cantidad = new() { Minimum = 1, Maximum = 100000, Value = 1, Width = 75 };
     private readonly Label total = new() { Text = "Total estimado: Q 0.00", Height = 30, Dock = DockStyle.Top, TextAlign = ContentAlignment.MiddleRight };
     private readonly Dictionary<string, List<OpcionRegistro>> articulos = new();
+    // Factura que se selecciona al abrir el registro de un pago justo después de emitirla.
+    private readonly int? facturaInicial;
 
-    public RegistroForm(SesionUsuario sesion, string tipo)
+    public RegistroForm(SesionUsuario sesion, string tipo, int? facturaInicial = null)
     {
         if (!ConexionBD.PuedeRegistrar(sesion,tipo)) throw new UnauthorizedAccessException("No tiene permiso para abrir este registro.");
         this.sesion = sesion;
         this.tipo = tipo;
+        this.facturaInicial = facturaInicial;
         Text = tipo == "Clave" ? "Restablecer contraseña" : Titulo(tipo);
         StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Segoe UI",10);
@@ -430,23 +448,51 @@ public sealed class RegistroForm : Form
             case "Movimiento": Catalogo("producto","Producto"); Lista("tipo","Tipo","Entrada","Salida"); Numero("cantidad","Cantidad",false,1); Texto("motivo","Motivo",250); break;
             case "Servicio": Texto("nombre","Nombre",100); Numero("precio","Precio",true); Texto("descripcion","Descripción",250); Lista("categoria","Tipo de servicio","Corte de pelo","Arreglo de barba","Pelo y barba","Instalación de prótesis","Mantenimiento"); break;
             case "Caja": Texto("nombre","Nombre de caja",80); break;
+            case var eliminar when Eliminaciones.TryGetValue(eliminar, out var registro):
+                Catalogo(registro.Campo, registro.Titulo);
+                guardar.Text = "Eliminar";
+                guardar.BackColor = Color.Firebrick;
+                guardar.ForeColor = Color.White;
+                break;
+            case "Editar servicio":
+                Catalogo("servicio","Servicio");
+                Texto("nombre","Nombre",100); Numero("precio","Precio",true); Texto("descripcion","Descripción",250); Lista("categoria","Tipo de servicio","Corte de pelo","Arreglo de barba","Pelo y barba","Instalación de prótesis","Mantenimiento");
+                break;
+            case "Editar categoría": Catalogo("categoria","Categoría"); Texto("nombre","Nombre",80); Texto("descripcion","Descripción",250); break;
+            case "Editar método de pago": Catalogo("metodo","Método de pago"); Texto("nombre","Nombre",50); Lista("estado","Estado","Activo","Inactivo"); break;
+            case "Editar caja": Catalogo("caja","Caja"); Texto("nombre","Nombre de caja",80); Lista("estado","Estado","Abierta","Cerrada"); break;
+            case "Editar pago": Catalogo("pago","Pago"); Catalogo("metodo","Método de pago"); Texto("referencia","Referencia",100); break;
+            case "Editar asistencia": Catalogo("asistencia","Registro"); Texto("entrada","Entrada (HH:mm)",5); Texto("salida","Salida (HH:mm)",5); break;
+            case "Editar factura": Catalogo("factura","Factura"); Catalogo("cliente","Cliente"); Catalogo("trabajador","Trabajador"); Lista("estado","Estado","Vigente","Anulada"); break;
             case "Método de pago": Texto("nombre","Nombre",50); break;
             case "Transacción": Catalogo("caja","Caja"); Lista("tipo","Tipo","Ingreso","Egreso"); Texto("concepto","Concepto",200); Numero("monto","Monto",true); break;
             case "Cierre": Catalogo("caja","Caja"); Numero("contado","Dinero contado",true); break;
             case "Asistencia": Catalogo("trabajador","Trabajador"); Lista("tipo","Marca","Entrada","Salida"); break;
             case "Préstamo": Catalogo("trabajador","Trabajador"); Numero("monto","Monto solicitado",true); break;
-            case "Pago": Catalogo("factura","Factura"); Catalogo("metodo","Método de pago"); Catalogo("caja","Caja"); Numero("monto","Monto",true); Texto("referencia","Referencia",100); break;
+            case "Pago":
+                Catalogo("factura","Factura"); Catalogo("metodo","Método de pago"); Catalogo("caja","Caja"); Numero("monto","Monto",true); Texto("referencia","Referencia",100);
+                // El monto se llena con el saldo pendiente de la factura al elegirla o al elegir el método de pago.
+                ((ComboBox)controles["factura"]).SelectedIndexChanged += (_,_) => MontoPendiente();
+                ((ComboBox)controles["metodo"]).SelectionChangeCommitted += (_,_) => MontoPendiente();
+                break;
             case "Factura": Catalogo("cliente","Cliente"); Catalogo("trabajador","Trabajador"); CrearDetalle(); break;
         }
         estado.Text = tipo switch
         {
             "Clave" or "Empleado" => "La contraseña debe tener al menos 8 caracteres. Confírmala antes de guardar.",
-            "Factura" => "Se emitirá la factura y se descontará el inventario. Registra el cobro después en la pestaña Pagos.",
+            "Factura" => "Se emitirá la factura y se descontará el inventario. Después se abrirá el registro del pago.",
             "Asistencia" => "Se registrará la fecha y hora actuales.",
             "Préstamo" => "La solicitud quedará pendiente de aprobación.",
             "Editar empleado" => "Selecciona un trabajador para cargar sus datos. Una cuenta inactiva no puede iniciar sesión.",
             "Cliente" => "Deja el NIT vacío para consumidor final (CF). No se permiten dos clientes con el mismo NIT.",
             "Editar cliente" => "Selecciona un cliente para cargar sus datos.",
+            "Editar pago" => "Solo se corrigen el método y la referencia; el monto no cambia para no descuadrar la caja.",
+            "Editar asistencia" => "Escribe las horas como HH:mm. Deja la salida vacía si aún no ha salido.",
+            "Editar factura" => "Al anularla, los productos vuelven al inventario y los pagos se devuelven como egreso de su caja.",
+            "Editar servicio" or "Editar categoría" or "Editar método de pago" or "Editar caja" => "Selecciona un registro para cargar sus datos.",
+            "Eliminar factura" => "Se eliminará la factura con su detalle, pagos y movimientos de caja; los productos vuelven al inventario.",
+            "Eliminar pago" => "Se eliminará el pago y su ingreso en caja; la factura quedará con saldo pendiente.",
+            _ when tipo.StartsWith("Eliminar ") => "Si el registro tiene movimientos relacionados no se podrá eliminar. No se puede deshacer.",
             "Editar producto" => sesion.EsAdministrador ? "Selecciona un producto para cargar sus datos. Las existencias se ajustan con movimientos."
                 : "Selecciona un producto. Solo el administrador puede cambiar el precio.",
             "Resolver préstamo" => "Al autorizar, el saldo pendiente será el monto solicitado. La decisión no se puede cambiar.",
@@ -454,6 +500,9 @@ public sealed class RegistroForm : Form
             "Cierre" => "Se guardará el cuadre con el saldo registrado y la diferencia encontrada.",
             _ => "Completa los campos y pulsa Guardar."
         };
+        // Las ediciones nuevas cargan los datos del registro al elegirlo (las anteriores ya lo hacen arriba).
+        if (CatalogoEdicion is string edicion && tipo is not ("Editar empleado" or "Editar cliente" or "Editar producto"))
+            ((ComboBox)controles[edicion]).SelectionChangeCommitted += async (_,_) => await CargarEdicionAsync();
         guardar.Enabled = false;
         Shown += async (_,_) => await CargarCatalogosAsync();
         guardar.Click += async (_,_) => await GuardarAsync();
@@ -461,17 +510,32 @@ public sealed class RegistroForm : Form
     }
 
     // Operaciones que modifican registros existentes: el botón muestra la acción en lugar de "+ tipo".
-    internal static bool EsAccion(string tipo) => tipo is "Clave" or "Editar empleado" or "Editar cliente" or "Editar producto" or "Resolver préstamo" or "Descuento";
+    internal static bool EsAccion(string tipo) => tipo is "Clave" or "Resolver préstamo" or "Descuento" || tipo.StartsWith("Editar ") || tipo.StartsWith("Eliminar ");
     internal static string Titulo(string tipo) => tipo switch
     {
         "Clave" => "Restablecer clave",
-        "Editar empleado" or "Editar cliente" or "Editar producto" or "Resolver préstamo" => tipo,
+        "Resolver préstamo" => tipo,
+        _ when tipo.StartsWith("Editar ") || tipo.StartsWith("Eliminar ") => tipo,
         "Descuento" => "Descontar de salario",
         _ => "Registrar " + tipo.ToLowerInvariant()
     };
 
+    // Campo y etiqueta del catálogo del registro que se elimina.
+    private static readonly Dictionary<string, (string Campo, string Titulo)> Eliminaciones = new()
+    {
+        ["Eliminar empleado"] = ("trabajador", "Trabajador"), ["Eliminar cliente"] = ("cliente", "Cliente"), ["Eliminar producto"] = ("producto", "Producto"),
+        ["Eliminar categoría"] = ("categoria", "Categoría"), ["Eliminar servicio"] = ("servicio", "Servicio"), ["Eliminar método de pago"] = ("metodo", "Método de pago"),
+        ["Eliminar caja"] = ("caja", "Caja"), ["Eliminar pago"] = ("pago", "Pago"), ["Eliminar asistencia"] = ("asistencia", "Registro"), ["Eliminar factura"] = ("factura", "Factura")
+    };
+
     // El primer campo de una edición es el catálogo del registro que se modifica.
-    private string? CatalogoEdicion => tipo switch { "Editar empleado" => "trabajador", "Editar cliente" => "cliente", "Editar producto" => "producto", _ => null };
+    private string? CatalogoEdicion => tipo switch
+    {
+        "Editar empleado" => "trabajador", "Editar cliente" => "cliente", "Editar producto" => "producto",
+        "Editar servicio" => "servicio", "Editar categoría" => "categoria", "Editar método de pago" => "metodo", "Editar caja" => "caja",
+        "Editar pago" => "pago", "Editar asistencia" => "asistencia", "Editar factura" => "factura",
+        _ => null
+    };
 
     private async Task CargarEdicionAsync()
     {
@@ -549,6 +613,11 @@ public sealed class RegistroForm : Form
         };
         quitar.Click += (_,_) => { if(detalle.CurrentRow!=null) detalle.Rows.Remove(detalle.CurrentRow); ActualizarTotal(); };
     }
+    private void MontoPendiente()
+    {
+        if (((ComboBox)controles["factura"]).SelectedItem is OpcionRegistro factura && controles["monto"] is NumericUpDown monto)
+            monto.Value = Math.Clamp(factura.Precio, monto.Minimum, monto.Maximum);
+    }
     private void CambiarArticulos()
     {
         if(articulos.TryGetValue(tipoLinea.Text,out var lista)) articulo.DataSource=lista;
@@ -570,6 +639,12 @@ public sealed class RegistroForm : Form
                 articulos["Producto"]=await ConexionBD.OpcionesRegistroAsync(sesion,tipo,"producto");
                 if(IsDisposed) return;
                 CambiarArticulos();
+            }
+            if(facturaInicial is int inicial && controles.TryGetValue("factura",out var control))
+            {
+                var combo=(ComboBox)control;
+                combo.SelectedItem=combo.Items.OfType<OpcionRegistro>().FirstOrDefault(o=>o.Id==inicial) ?? combo.SelectedItem;
+                estado.Text=$"Factura {inicial} emitida. Elige el método de pago y la caja; el monto es el saldo pendiente.";
             }
             // Al editar, Guardar se habilita hasta que los datos del trabajador estén cargados.
             if(CatalogoEdicion!=null) await CargarEdicionAsync();
@@ -595,6 +670,8 @@ public sealed class RegistroForm : Form
                 else datos[campo.Key]=campo.Value.Text;
             }
             if(controles.ContainsKey("confirmar") && controles["clave"].Text != controles["confirmar"].Text) throw new ArgumentException("Las contraseñas no coinciden.");
+            if(Eliminaciones.TryGetValue(tipo,out var eliminado) &&
+               MessageBox.Show(this,$"¿Eliminar definitivamente «{controles[eliminado.Campo].Text}»? Esta acción no se puede deshacer.","Confirmar eliminación",MessageBoxButtons.YesNo,MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2)!=DialogResult.Yes) return;
             guardando=true; guardar.Enabled=false;
             estado.ForeColor=Color.DimGray; estado.Text="Guardando…";
             FacturaEmitida = await ConexionBD.GuardarRegistroAsync(sesion,tipo,datos,detalle.Rows.Cast<DataGridViewRow>().Select(f=>(LineaRegistro)f.Tag!).ToArray());
