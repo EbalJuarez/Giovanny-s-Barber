@@ -136,9 +136,14 @@ public partial class ConexionBD
                     );
                     INSERT INTO dbo.RolModulo (rol, modulo) VALUES
                         ('Trabajador', N'Mi jornada'),
-                        ('Cajera', N'Clientes'), ('Cajera', N'Facturación'),
-                        ('Cajero', N'Clientes'), ('Cajero', N'Facturación');
+                        ('Trabajador', N'Clientes'), ('Trabajador', N'Facturación');
                 END;
+                UPDATE dbo.Usuario SET rol='Trabajador' WHERE rol IN ('Cajera','Cajero');
+                DELETE FROM dbo.RolModulo WHERE rol IN ('Cajera','Cajero');
+                INSERT INTO dbo.RolModulo (rol, modulo)
+                SELECT p.rol, p.modulo
+                FROM (VALUES ('Trabajador', N'Mi jornada'), ('Trabajador', N'Clientes'), ('Trabajador', N'Facturación')) p(rol, modulo)
+                WHERE NOT EXISTS (SELECT 1 FROM dbo.RolModulo r WHERE r.rol=p.rol AND r.modulo=p.modulo);
                 """, conexion, transaccion);
             await instalar.ExecuteNonQueryAsync();
             transaccion.Commit();
@@ -296,7 +301,7 @@ public partial class ConexionBD
         string origen = tipo.StartsWith("Eliminar ") ? "Editar " + tipo["Eliminar ".Length..] : tipo;
         string sql = (origen, catalogo) switch
         {
-            ("Empleado", "rol") => "SELECT 1 AS ID, 'Administrador' AS Nombre UNION ALL SELECT 2, 'Trabajador' UNION ALL SELECT 3, 'Cajera' UNION ALL SELECT 4, 'Cajero'",
+            ("Empleado", "rol") => "SELECT 1 AS ID, 'Administrador' AS Nombre UNION ALL SELECT 2, 'Trabajador'",
             ("Clave", "usuario") => "SELECT id_usuario, nombre_usuario FROM dbo.Usuario ORDER BY nombre_usuario",
             ("Editar empleado", "trabajador") => "SELECT t.id_trabajador, CONCAT(t.nombres,' ',t.apellidos,' · ',COALESCE(u.estado,'Sin usuario')) FROM dbo.Trabajador t LEFT JOIN dbo.Usuario u ON u.id_usuario=t.id_usuario ORDER BY t.nombres",
             ("Resolver préstamo", "prestamo") => "SELECT p.id_prestamo, CONCAT('#',p.id_prestamo,' · ',t.nombres,' ',t.apellidos,' · Q ',p.monto,' · ',CONVERT(varchar(10),p.fecha_solicitud,103)) FROM dbo.Prestamo p JOIN dbo.Trabajador t ON t.id_trabajador=p.id_trabajador WHERE p.estado='Pendiente' ORDER BY p.fecha_solicitud",
@@ -486,10 +491,10 @@ public partial class ConexionBD
                     string usuario = Texto("usuario", 50);
                     string clave = Clave();
                     string rol = Texto("rol", 30);
-                    if (rol is not ("Administrador" or "Trabajador" or "Cajera" or "Cajero")) throw new ArgumentException("Rol no válido.");
+                    if (rol is not ("Administrador" or "Trabajador")) throw new ArgumentException("Rol no válido.");
                     if (await Escalar("SELECT id_usuario FROM dbo.Usuario WHERE nombre_usuario=@nombre", ("@nombre", usuario)) != null) throw new InvalidOperationException("Ese nombre de usuario ya existe.");
                     int nuevoUsuario = Convert.ToInt32(await Escalar("INSERT INTO dbo.Usuario(nombre_usuario,contrasena_hash,rol,estado) OUTPUT INSERTED.id_usuario VALUES(@nombre,@clave,@rol,'Activo')", ("@nombre", usuario), ("@clave", BCrypt.Net.BCrypt.HashPassword(clave)), ("@rol", rol)));
-                    await Ejecutar("INSERT INTO dbo.Trabajador(id_usuario,nombres,apellidos,telefono,direccion,salario) VALUES(@usuario,@nombres,@apellidos,@telefono,@direccion,@salario)", ("@usuario", nuevoUsuario), ("@nombres", Texto("nombres",80)), ("@apellidos", Texto("apellidos",80)), ("@telefono", Texto("telefono",20,false)), ("@direccion", Texto("direccion",200,false)), ("@salario", Numero("salario")));
+                    await Ejecutar("INSERT INTO dbo.Trabajador(id_usuario,nombres,apellidos,telefono,direccion,salario) VALUES(@usuario,@nombres,@apellidos,@telefono,@direccion,@salario)", ("@usuario", nuevoUsuario), ("@nombres", Texto("nombres",80)), ("@apellidos", Texto("apellidos",80)), ("@telefono", Texto("telefono",20,false)), ("@direccion", Texto("direccion",200,false)), ("@salario", Numero("salario",1000m)));
                     break;
                 case "Editar empleado":
                     int editado = Entero("trabajador");
@@ -498,7 +503,7 @@ public partial class ConexionBD
                     object? cuenta = await Escalar("SELECT id_usuario FROM dbo.Trabajador WITH (UPDLOCK) WHERE id_trabajador=@id", ("@id", editado));
                     if (cuenta == null) throw new InvalidOperationException("El trabajador ya no existe.");
                     if (cuenta is int propia && propia == sesion.IdUsuario && estadoCuenta == "Inactivo") throw new InvalidOperationException("No puede desactivar su propia cuenta.");
-                    await Ejecutar("UPDATE dbo.Trabajador SET nombres=@nombres,apellidos=@apellidos,telefono=@telefono,direccion=@direccion,salario=@salario WHERE id_trabajador=@id", ("@nombres", Texto("nombres",80)), ("@apellidos", Texto("apellidos",80)), ("@telefono", Texto("telefono",20,false)), ("@direccion", Texto("direccion",200,false)), ("@salario", Numero("salario")), ("@id", editado));
+                    await Ejecutar("UPDATE dbo.Trabajador SET nombres=@nombres,apellidos=@apellidos,telefono=@telefono,direccion=@direccion,salario=@salario WHERE id_trabajador=@id", ("@nombres", Texto("nombres",80)), ("@apellidos", Texto("apellidos",80)), ("@telefono", Texto("telefono",20,false)), ("@direccion", Texto("direccion",200,false)), ("@salario", Numero("salario",1000m)), ("@id", editado));
                     if (cuenta is int idCuenta) await Ejecutar("UPDATE dbo.Usuario SET estado=@estado WHERE id_usuario=@id", ("@estado", estadoCuenta), ("@id", idCuenta));
                     break;
                 case "Resolver préstamo":

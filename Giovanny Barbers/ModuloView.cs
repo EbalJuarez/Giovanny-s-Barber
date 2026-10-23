@@ -111,6 +111,7 @@ public sealed class ModuloView : UserControl
                 columna.MinimumWidth = 85;
                 if (columna.ValueType == typeof(decimal)) columna.DefaultCellStyle.Format = "N2";
                 if (columna.ValueType == typeof(DateTime)) columna.DefaultCellStyle.Format = "dd/MM/yyyy";
+                if (columna.ValueType == typeof(TimeSpan)) columna.DefaultCellStyle.Format = @"hh\:mm\:ss";
             }
             if (filtros.ContainsKey(seccion)) AplicarFiltro(seccion, true);
             else pagina.Estado.Text = datos.Rows.Count == 0 ? "No hay registros para esta consulta." : $"{datos.Rows.Count} registros · Actualizado a las {DateTime.Now:HH:mm}";
@@ -417,14 +418,14 @@ public sealed class RegistroForm : Form
         {
             case "Empleado":
                 Texto("nombres","Nombres",80); Texto("apellidos","Apellidos",80); Texto("telefono","Teléfono",20); Texto("direccion","Dirección",200);
-                Numero("salario","Salario mensual",true);
+                Numero("salario","Salario quincenal",true,1000);
                 Texto("usuario","Usuario",50); Texto("clave","Contraseña nueva",72,true); Texto("confirmar","Confirmar contraseña",72,true);
-                Lista("rol","Rol","Trabajador","Cajera","Cajero","Administrador");
+                Lista("rol","Rol","Trabajador","Administrador");
                 break;
             case "Editar empleado":
                 Catalogo("trabajador","Trabajador");
                 Texto("nombres","Nombres",80); Texto("apellidos","Apellidos",80); Texto("telefono","Teléfono",20); Texto("direccion","Dirección",200);
-                Numero("salario","Salario mensual",true);
+                Numero("salario","Salario quincenal",true,1000);
                 Lista("estado","Estado de la cuenta","Activo","Inactivo");
                 ((ComboBox)controles["trabajador"]).SelectionChangeCommitted += async (_,_) => await CargarEdicionAsync();
                 break;
@@ -547,7 +548,10 @@ public sealed class RegistroForm : Form
             if (IsDisposed) return;
             foreach (var dato in datos)
             {
-                if (controles[dato.Key] is NumericUpDown numero) numero.Value = Math.Clamp(Convert.ToDecimal(dato.Value), numero.Minimum, numero.Maximum);
+                if (controles[dato.Key] is NumericUpDown numero)
+                {
+                    if (dato.Value != DBNull.Value) numero.Value = Math.Clamp(Convert.ToDecimal(dato.Value), numero.Minimum, numero.Maximum);
+                }
                 // Un catálogo recibe el Id del registro relacionado; una lista fija recibe el texto.
                 else if (controles[dato.Key] is ComboBox lista) lista.SelectedItem = dato.Value is int id ? lista.Items.OfType<OpcionRegistro>().FirstOrDefault(o => o.Id == id) : dato.Value;
                 else controles[dato.Key].Text = (string)dato.Value;

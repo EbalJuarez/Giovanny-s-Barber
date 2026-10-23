@@ -18,10 +18,11 @@ INSERT INTO dbo.RolModulo (rol, modulo)
 SELECT p.rol, p.modulo
 FROM (VALUES
     ('Trabajador', N'Mi jornada'),
-    ('Cajera', N'Clientes'), ('Cajera', N'Facturación'),
-    ('Cajero', N'Clientes'), ('Cajero', N'Facturación')
+    ('Trabajador', N'Clientes'), ('Trabajador', N'Facturación')
 ) AS p(rol, modulo)
 WHERE NOT EXISTS (SELECT 1 FROM dbo.RolModulo r WHERE r.rol = p.rol AND r.modulo = p.modulo);
+UPDATE dbo.Usuario SET rol = 'Trabajador' WHERE rol IN ('Cajera', 'Cajero');
+DELETE FROM dbo.RolModulo WHERE rol IN ('Cajera', 'Cajero');
 GO
 -- FIN MIGRACIÓN RBAC.
 

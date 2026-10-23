@@ -4,7 +4,7 @@ USE GeovannysBarberDB;
 INSERT INTO Usuario (nombre_usuario, contrasena_hash, rol, estado) VALUES
 ('DonGio', '$2a$11$gNfzhyeyz8iz1UopwqlR4OGGCfG50QRTVAqNG/MM0zuvzcI5aKVsC', 'Administrador', 'Activo'),
 ('DonNoe', '$2a$11$.LXWLQR/JYY5dFGiJl1l8u6F/onzzqRZUuVPbUcvndySBv3K8GBkS', 'Trabajador', 'Activo'),
-('Lis', '$2a$11$ZQARC8AodD.3jaOd39FMF.1hkN9lHy15rAEj.AH9PopSfeM8QfSkq', 'Cajera', 'Activo'),
+('Lis', '$2a$11$ZQARC8AodD.3jaOd39FMF.1hkN9lHy15rAEj.AH9PopSfeM8QfSkq', 'Trabajador', 'Activo'),
 ('Alex', '$2a$11$FzBcXB89jUUDkJuHdSF9JesJRgrCJWKXMNQ1DTHyHH6FBpUzhglwG', 'Trabajador', 'Inactivo'),
 ('Willy', '$2a$11$0xSRU8yGwoBrVToadr8IqObMF30DiWf0ceCxAwxVuRwL5M6yjMTgq', 'Trabajador', 'Inactivo');
 

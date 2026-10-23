@@ -200,8 +200,7 @@ CREATE TABLE dbo.RolModulo (
 -- El Administrador no necesita filas: tiene acceso a todos los módulos.
 INSERT INTO RolModulo (rol, modulo) VALUES
     ('Trabajador', N'Mi jornada'),
-    ('Cajera', N'Clientes'), ('Cajera', N'Facturación'),
-    ('Cajero', N'Clientes'), ('Cajero', N'Facturación');
+    ('Trabajador', N'Clientes'), ('Trabajador', N'Facturación');
 
 -- Cliente genérico para quien no quiere dar sus datos.
 INSERT INTO Cliente (nombres, nit) VALUES ('Consumidor Final', 'CF');
