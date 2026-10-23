@@ -492,7 +492,8 @@ public sealed class RegistroForm : Form
             "Editar factura" => "Al anularla, los productos vuelven al inventario y los pagos se devuelven como egreso de su caja.",
             "Editar servicio" or "Editar categoría" or "Editar método de pago" or "Editar caja" => "Selecciona un registro para cargar sus datos.",
             "Eliminar factura" => "Se eliminará la factura con su detalle, pagos y movimientos de caja; los productos vuelven al inventario.",
-            "Eliminar pago" => "Se eliminará el pago y su ingreso en caja; la factura quedará con saldo pendiente.",
+            "Eliminar caja" => "Se eliminará la caja con sus cierres y movimientos manuales. Si tiene pagos de facturas no se podrá eliminar.",
+            "Eliminar pago" =>"Se eliminará el pago y su ingreso en caja; la factura quedará con saldo pendiente.",
             _ when tipo.StartsWith("Eliminar ") => "Si el registro tiene movimientos relacionados no se podrá eliminar. No se puede deshacer.",
             "Editar producto" => sesion.EsAdministrador ? "Selecciona un producto para cargar sus datos. Las existencias se ajustan con movimientos."
                 : "Selecciona un producto. Solo el administrador puede cambiar el precio.",

@@ -659,7 +659,10 @@ public partial class ConexionBD
                     break;
                 case "Eliminar caja":
                     int cajaBorrada = Entero("caja");
-                    await SinUso("SELECT TOP (1) 1 FROM dbo.Movimiento_Contable WHERE id_caja=@id UNION ALL SELECT TOP (1) 1 FROM dbo.Cuadre_Caja WHERE id_caja=@id", cajaBorrada, "La caja tiene movimientos o cierres. Ciérrela con Editar caja.");
+                    // Los cierres y movimientos manuales se borran con la caja; los ingresos de pagos de facturas la bloquean para no descuadrar la contabilidad.
+                    await SinUso("SELECT TOP (1) 1 FROM dbo.Movimiento_Contable WHERE id_caja=@id AND id_pago IS NOT NULL", cajaBorrada, "La caja tiene pagos de facturas registrados. Ciérrela con Editar caja.");
+                    await Ejecutar("DELETE FROM dbo.Movimiento_Contable WHERE id_caja=@id", ("@id",cajaBorrada));
+                    await Ejecutar("DELETE FROM dbo.Cuadre_Caja WHERE id_caja=@id", ("@id",cajaBorrada));
                     await Borrar("DELETE FROM dbo.Caja WHERE id_caja=@id", cajaBorrada, "La caja ya no existe.");
                     break;
                 case "Eliminar asistencia":
