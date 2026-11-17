@@ -53,35 +53,92 @@ public static class ComprobanteTermico
         return resultado;
     }
 
-    public static List<string> Lineas(Comprobante c, bool reimpresion)
+    // Líneas de un ticket de 32 columnas; lo usan el comprobante de venta y el reporte de cierre.
+    private sealed class Ticket
     {
-        var config = ConexionBD.Configuracion("Comprobante");
-        var lineas = new List<string>();
-        void Centrado(string? texto) { foreach (string l in Ajustar(texto, Columnas)) lineas.Add(l.PadLeft((Columnas + l.Length) / 2)); }
-        void Separador() => lineas.Add(new string('-', Columnas));
+        public readonly List<string> Lineas = new();
+        public void Centrado(string? texto) { foreach (string l in Ajustar(texto, Columnas)) Lineas.Add(l.PadLeft((Columnas + l.Length) / 2)); }
+        public void Separador() => Lineas.Add(new string('-', Columnas));
         // Texto a la izquierda e importe alineado a la derecha; si no caben juntos, el importe baja a su propia línea.
-        void Par(string izquierda, string derecha)
+        public void Par(string izquierda, string derecha)
         {
-            if (izquierda.Length + derecha.Length < Columnas) { lineas.Add(izquierda.PadRight(Columnas - derecha.Length) + derecha); return; }
-            lineas.AddRange(Ajustar(izquierda, Columnas));
-            lineas.Add(derecha.PadLeft(Columnas));
+            if (izquierda.Length + derecha.Length < Columnas) { Lineas.Add(izquierda.PadRight(Columnas - derecha.Length) + derecha); return; }
+            Lineas.AddRange(Ajustar(izquierda, Columnas));
+            Lineas.Add(derecha.PadLeft(Columnas));
         }
-        void Campo(string etiqueta, string? valor)
+        public void Campo(string etiqueta, string? valor)
         {
             if (string.IsNullOrWhiteSpace(valor)) return;
             const int Sangria = 9;
             var partes = Ajustar(valor, Columnas - Sangria);
-            for (int i = 0; i < partes.Count; i++) lineas.Add((i == 0 ? etiqueta : "").PadRight(Sangria) + partes[i]);
+            for (int i = 0; i < partes.Count; i++) Lineas.Add((i == 0 ? etiqueta : "").PadRight(Sangria) + partes[i]);
         }
-        string Moneda(decimal monto) => "Q " + monto.ToString("N2", Cultura);
+        public void Encabezado()
+        {
+            var config = ConexionBD.Configuracion("Comprobante");
+            // El nombre solo se imprime como texto si falta el logo, que ya lo incluye.
+            if (Logo == null) Centrado((config["Comercio"] is { Length: > 0 } comercio ? comercio : "Geovanny's Barber Shop").ToUpper(Cultura));
+            // PENDIENTE: completar la dirección y el teléfono del comercio en appsettings.json (sección "Comprobante").
+            // Mientras estén vacíos, esas líneas no se imprimen.
+            Centrado(config["Direccion"]);
+            Centrado(config["Telefono"] is { Length: > 0 } telefono ? "Tel. " + telefono : null);
+            Separador();
+        }
+    }
 
-        // El nombre solo se imprime como texto si falta el logo, que ya lo incluye.
-        if (Logo == null) Centrado((config["Comercio"] is { Length: > 0 } comercio ? comercio : "Geovanny's Barber Shop").ToUpper(Cultura));
-        // PENDIENTE: completar la dirección y el teléfono del comercio en appsettings.json (sección "Comprobante").
-        // Mientras estén vacíos, esas líneas no se imprimen.
-        Centrado(config["Direccion"]);
-        Centrado(config["Telefono"] is { Length: > 0 } telefono ? "Tel. " + telefono : null);
-        Separador();
+    private static string Moneda(decimal monto) => "Q " + monto.ToString("N2", Cultura);
+
+    // RF14 y CU-20: reporte diario del cierre de caja para firmarlo y archivarlo.
+    public static List<string> LineasCierre(ReporteCierre r, bool reimpresion)
+    {
+        var t = new Ticket();
+        t.Encabezado();
+        t.Centrado("REPORTE DE CIERRE DE CAJA");
+        t.Campo("No.:", r.Numero.ToString("D6", Cultura));
+        t.Campo("Caja:", r.Caja);
+        t.Campo("Desde:", r.Desde?.ToString("dd/MM/yyyy HH:mm", Cultura) ?? "Inicio de la caja");
+        t.Campo("Hasta:", r.Fecha.ToString("dd/MM/yyyy HH:mm", Cultura));
+        t.Campo("Cerró:", r.Usuario);
+        t.Separador();
+        t.Centrado("MOVIMIENTOS DEL PERÍODO");
+        if (r.Movimientos.Count == 0) t.Centrado("Sin movimientos");
+        foreach (var m in r.Movimientos)
+            t.Par($"{m.Tipo} {m.Origen.ToLower(Cultura)} ({m.Cantidad})", Moneda(m.Monto));
+        decimal Total(bool efectivo, string tipo) => r.Movimientos.Where(m => m.Efectivo == efectivo && m.Tipo == tipo).Sum(m => m.Monto);
+        t.Separador();
+        t.Centrado("CUADRE DEL EFECTIVO");
+        t.Par("Fondo inicial", Moneda(r.FondoInicial));
+        t.Par("+ Ingresos en efectivo", Moneda(Total(true, "Ingreso")));
+        t.Par("- Egresos en efectivo", Moneda(Total(true, "Egreso")));
+        t.Par("Efectivo esperado", Moneda(r.Esperado));
+        t.Par("Efectivo contado", Moneda(r.Contado));
+        t.Par(r.Diferencia > 0 ? "Sobrante" : r.Diferencia < 0 ? "Faltante" : "Diferencia", Moneda(Math.Abs(r.Diferencia)));
+        t.Par("Retirado", Moneda(r.Contado - r.FondoSiguiente));
+        t.Par("Fondo que queda", Moneda(r.FondoSiguiente));
+        decimal otros = Total(false, "Ingreso") - Total(false, "Egreso");
+        if (otros != 0)
+        {
+            t.Separador();
+            t.Par("Tarjeta y otros métodos", Moneda(otros));
+            t.Centrado("Concilie con el cierre del POS");
+        }
+        t.Separador();
+        t.Lineas.AddRange(["", "Firma: ________________________", ""]);
+        if (reimpresion) t.Centrado("Reimpresión " + DateTime.Now.ToString("dd/MM/yyyy HH:mm", Cultura));
+        t.Lineas.AddRange(["", "", ""]);
+        return t.Lineas;
+    }
+
+    public static List<string> Lineas(Comprobante c, bool reimpresion)
+    {
+        var config = ConexionBD.Configuracion("Comprobante");
+        var t = new Ticket();
+        var lineas = t.Lineas;
+        void Centrado(string? texto) => t.Centrado(texto);
+        void Separador() => t.Separador();
+        void Par(string izquierda, string derecha) => t.Par(izquierda, derecha);
+        void Campo(string etiqueta, string? valor) => t.Campo(etiqueta, valor);
+        t.Encabezado();
         if (string.Equals(c.Estado, "Anulada", StringComparison.OrdinalIgnoreCase)) Centrado("*** FACTURA ANULADA ***");
         Campo("No.:", c.Numero.ToString("D6", Cultura));
         Campo("Fecha:", c.Fecha.ToString("dd/MM/yyyy HH:mm", Cultura));
@@ -189,9 +246,8 @@ public static class ComprobanteTermico
 // Vista previa del comprobante con opción de imprimir; sirve para la emisión y para la reimpresión.
 public sealed class ComprobanteForm : Form
 {
-    private readonly SesionUsuario sesion;
-    private readonly int factura;
-    private readonly bool reimpresion;
+    // Carga las líneas del ticket; Bloqueo explica por qué aún no se puede imprimir y Listo es el mensaje cuando sí.
+    private readonly Func<Task<(List<string> Lineas, string? Bloqueo, string Listo)>> cargar;
     private readonly TextBox vista = new() { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill, Font = new Font("Consolas", 10), BackColor = Color.White, WordWrap = false };
     private readonly Button imprimir = new() { Text = "Imprimir", Width = 130, Height = 40, BackColor = Color.FromArgb(171,140,57), FlatStyle = FlatStyle.Flat, Enabled = false };
     private readonly Label estado = new() { Dock = DockStyle.Fill, ForeColor = Color.DimGray, Padding = new Padding(8) };
@@ -199,12 +255,26 @@ public sealed class ComprobanteForm : Form
     // Motivo por el que la sesión dejó de ser válida; quien abrió la ventana cierra la sesión.
     public string? SesionFinalizada { get; private set; }
 
-    public ComprobanteForm(SesionUsuario sesion, int factura, bool reimpresion)
+    public ComprobanteForm(SesionUsuario sesion, int factura, bool reimpresion) : this("Comprobante de la factura " + factura, async () =>
     {
-        this.sesion = sesion;
-        this.factura = factura;
-        this.reimpresion = reimpresion;
-        Text = "Comprobante de la factura " + factura;
+        var comprobante = await ConexionBD.ObtenerComprobanteAsync(sesion, factura);
+        // Una factura vigente se imprime hasta que tiene un pago registrado.
+        string? bloqueo = comprobante.Pagado == 0 && !string.Equals(comprobante.Estado, "Anulada", StringComparison.OrdinalIgnoreCase)
+            ? "Registra el pago de la factura en la pestaña Pagos para poder imprimir." : null;
+        return (ComprobanteTermico.Lineas(comprobante, reimpresion), bloqueo, reimpresion ? "Reimpresión del comprobante." : "Revisa el comprobante antes de imprimir.");
+    }) { }
+
+    // RF14: reporte del cierre de caja, al cerrar o para reimprimirlo desde Cierres diarios.
+    public static ComprobanteForm Cierre(SesionUsuario sesion, int cuadre, bool reimpresion) => new("Reporte del cierre " + cuadre, async () =>
+    {
+        var reporte = await ConexionBD.ObtenerCierreAsync(sesion, cuadre);
+        return (ComprobanteTermico.LineasCierre(reporte, reimpresion), null, reimpresion ? "Reimpresión del reporte de cierre." : "Cierre registrado. Imprime el reporte para firmarlo y archivarlo.");
+    });
+
+    private ComprobanteForm(string titulo, Func<Task<(List<string> Lineas, string? Bloqueo, string Listo)>> cargar)
+    {
+        this.cargar = cargar;
+        Text = titulo;
         StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Segoe UI", 10);
         BackColor = Color.FromArgb(246,247,249);
@@ -234,7 +304,7 @@ public sealed class ComprobanteForm : Form
         pie.Controls.Add(botones);
         estructura.Controls.Add(pie,0,1);
         CancelButton = cerrar;
-        estado.Text = "Cargando comprobante…";
+        estado.Text = "Cargando…";
         Shown += async (_,_) => await CargarAsync();
         imprimir.Click += (_,_) => Imprimir();
     }
@@ -243,22 +313,17 @@ public sealed class ComprobanteForm : Form
     {
         try
         {
-            var comprobante = await ConexionBD.ObtenerComprobanteAsync(sesion, factura);
+            var (cargadas, bloqueo, listo) = await cargar();
             if (IsDisposed) return;
-            lineas = ComprobanteTermico.Lineas(comprobante, reimpresion);
+            lineas = cargadas;
             vista.Lines = lineas.ToArray();
-            // Una factura vigente se imprime hasta que tiene un pago registrado.
-            if (comprobante.Pagado == 0 && !string.Equals(comprobante.Estado, "Anulada", StringComparison.OrdinalIgnoreCase))
-            {
-                estado.Text = "Registra el pago de la factura en la pestaña Pagos para poder imprimir.";
-                return;
-            }
-            estado.Text = reimpresion ? "Reimpresión del comprobante." : "Revisa el comprobante antes de imprimir.";
+            if (bloqueo != null) { estado.Text = bloqueo; return; }
+            estado.Text = listo;
             imprimir.Enabled = true;
             imprimir.Focus();
         }
         catch (SesionInvalidaException ex) { if (!IsDisposed) { SesionFinalizada = ex.Message; DialogResult = DialogResult.Abort; } }
-        catch (Exception ex) { if (!IsDisposed) { estado.ForeColor = Color.Firebrick; estado.Text = "No se pudo cargar el comprobante: " + ex.Message; } }
+        catch (Exception ex) { if (!IsDisposed) { estado.ForeColor = Color.Firebrick; estado.Text = "No se pudo cargar: " + ex.Message; } }
     }
 
     private void Imprimir()
@@ -269,7 +334,7 @@ public sealed class ComprobanteForm : Form
             if (ComprobanteTermico.Imprimir(lineas, this))
             {
                 estado.ForeColor = Color.DimGray;
-                estado.Text = "Comprobante enviado a la impresora.";
+                estado.Text = "Enviado a la impresora.";
             }
         }
         catch (Exception ex)

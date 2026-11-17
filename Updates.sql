@@ -93,6 +93,74 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Cliente WHERE nombres = 'Consumidor Final' AND 
 GO
 -- FIN MIGRACIÓN CONSUMIDOR FINAL.
 
+-- MIGRACIÓN BITÁCORA Y DESACTIVACIÓN para una base ya existente.
+-- Los registros ya no se eliminan: se desactivan (activo = 0) y se pueden reactivar desde Auditoría.
+-- La bitácora guarda quién hizo cada operación, cuándo, y el registro antes y después en JSON.
+-- La aplicación la instala sola al iniciar sesión si la cuenta de SQL Server tiene permiso.
+USE GeovannysBarberDB;
+GO
+IF OBJECT_ID(N'dbo.Bitacora', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Bitacora (
+        id_bitacora INT IDENTITY(1,1) PRIMARY KEY,
+        fecha DATETIME2 NOT NULL CONSTRAINT DF_Bitacora_fecha DEFAULT SYSDATETIME(),
+        id_usuario INT NULL REFERENCES dbo.Usuario(id_usuario),
+        usuario VARCHAR(50) NOT NULL,
+        accion NVARCHAR(40) NOT NULL,
+        entidad NVARCHAR(40) NOT NULL,
+        id_registro INT NULL,
+        descripcion NVARCHAR(1000) NULL,
+        antes NVARCHAR(MAX) NULL,
+        despues NVARCHAR(MAX) NULL
+    );
+    CREATE INDEX IX_Bitacora_fecha ON dbo.Bitacora(fecha DESC);
+    CREATE INDEX IX_Bitacora_registro ON dbo.Bitacora(entidad, id_registro);
+END;
+IF COL_LENGTH(N'dbo.Trabajador', N'activo') IS NULL ALTER TABLE dbo.Trabajador ADD activo BIT NOT NULL CONSTRAINT DF_Trabajador_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Cliente', N'activo') IS NULL ALTER TABLE dbo.Cliente ADD activo BIT NOT NULL CONSTRAINT DF_Cliente_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Categoria', N'activo') IS NULL ALTER TABLE dbo.Categoria ADD activo BIT NOT NULL CONSTRAINT DF_Categoria_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Producto', N'activo') IS NULL ALTER TABLE dbo.Producto ADD activo BIT NOT NULL CONSTRAINT DF_Producto_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Servicio', N'activo') IS NULL ALTER TABLE dbo.Servicio ADD activo BIT NOT NULL CONSTRAINT DF_Servicio_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Metodo_Pago', N'activo') IS NULL ALTER TABLE dbo.Metodo_Pago ADD activo BIT NOT NULL CONSTRAINT DF_Metodo_Pago_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Caja', N'activo') IS NULL ALTER TABLE dbo.Caja ADD activo BIT NOT NULL CONSTRAINT DF_Caja_activo DEFAULT 1;
+IF COL_LENGTH(N'dbo.Asistencia', N'activo') IS NULL ALTER TABLE dbo.Asistencia ADD activo BIT NOT NULL CONSTRAINT DF_Asistencia_activo DEFAULT 1;
+GO
+-- FIN MIGRACIÓN BITÁCORA Y DESACTIVACIÓN.
+
+-- MIGRACIÓN FASE 2: CONTABILIDAD Y POS para una base ya existente.
+-- Usuario de cada movimiento contable (CU-19), quién cerró la caja y el fondo que queda para el siguiente período (CU-20 y RF14),
+-- caja y usuario de cada transacción POS (CU-17) y tipos fijos de servicio (CU-08).
+-- La aplicación la instala sola al iniciar sesión si la cuenta de SQL Server tiene permiso.
+USE GeovannysBarberDB;
+GO
+IF COL_LENGTH(N'dbo.Movimiento_Contable', N'id_usuario') IS NULL ALTER TABLE dbo.Movimiento_Contable ADD id_usuario INT NULL CONSTRAINT FK_Movimiento_Contable_Usuario REFERENCES dbo.Usuario(id_usuario);
+IF COL_LENGTH(N'dbo.Cuadre_Caja', N'id_usuario') IS NULL ALTER TABLE dbo.Cuadre_Caja ADD id_usuario INT NULL CONSTRAINT FK_Cuadre_Caja_Usuario REFERENCES dbo.Usuario(id_usuario);
+IF COL_LENGTH(N'dbo.Cuadre_Caja', N'fondo_siguiente') IS NULL ALTER TABLE dbo.Cuadre_Caja ADD fondo_siguiente DECIMAL(10,2) NULL;
+IF COL_LENGTH(N'dbo.Transaccion_POS', N'id_caja') IS NULL ALTER TABLE dbo.Transaccion_POS ADD id_caja INT NULL CONSTRAINT FK_Transaccion_POS_Caja REFERENCES dbo.Caja(id_caja);
+GO
+-- Los cierres anteriores dejaban todo lo contado como fondo del siguiente período.
+UPDATE dbo.Cuadre_Caja SET fondo_siguiente = monto_real WHERE fondo_siguiente IS NULL;
+-- El usuario de los movimientos ya guardados se toma de la bitácora.
+UPDATE m SET id_usuario = b.id_usuario
+FROM dbo.Movimiento_Contable m
+CROSS APPLY (SELECT TOP (1) x.id_usuario FROM dbo.Bitacora x
+    WHERE (m.id_pago IS NULL AND x.entidad = N'Transacción' AND x.id_registro = m.id_movimiento)
+       OR (m.id_pago IS NOT NULL AND x.entidad IN (N'Pago', N'Factura') AND x.id_registro IN (m.id_pago, (SELECT id_factura FROM dbo.Pago WHERE id_pago = m.id_pago)))
+    ORDER BY ABS(DATEDIFF(second, x.fecha, m.fecha))) b
+WHERE m.id_usuario IS NULL;
+-- Las categorías libres anteriores pasan a los tipos fijos de servicio.
+UPDATE dbo.Servicio SET categoria_servicio = CASE
+    WHEN nombre LIKE N'%barba%' AND (nombre LIKE N'%cabello%' OR nombre LIKE N'%pelo%') THEN N'Pelo y barba'
+    WHEN nombre LIKE N'%barba%' THEN N'Arreglo de barba'
+    WHEN nombre LIKE N'%mantenimiento%' THEN N'Mantenimiento'
+    WHEN nombre LIKE N'%pr_tesis%' THEN N'Instalación de prótesis'
+    ELSE N'Corte de pelo' END
+WHERE categoria_servicio IS NULL OR categoria_servicio NOT IN (N'Corte de pelo', N'Arreglo de barba', N'Pelo y barba', N'Instalación de prótesis', N'Mantenimiento');
+GO
+IF COL_LENGTH(N'dbo.Transaccion_POS', N'id_usuario') IS NULL ALTER TABLE dbo.Transaccion_POS ADD id_usuario INT NULL CONSTRAINT FK_Transaccion_POS_Usuario REFERENCES dbo.Usuario(id_usuario);
+GO
+-- FIN MIGRACIÓN FASE 2: CONTABILIDAD Y POS.
+
 -- =====================================================================
 -- DATOS DE PRUEBA: cambios manuales sobre los registros de creates.sql.
 -- Solo para una base de pruebas; no los ejecute en la base real.

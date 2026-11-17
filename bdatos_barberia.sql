@@ -24,6 +24,7 @@ CREATE TABLE Trabajador (
     telefono VARCHAR(20),
     direccion VARCHAR(200),
     salario DECIMAL(10,2) NULL,
+    activo BIT NOT NULL CONSTRAINT DF_Trabajador_activo DEFAULT 1,
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 CREATE TABLE Asistencia (
@@ -32,6 +33,7 @@ CREATE TABLE Asistencia (
     fecha DATE,
     hora_entrada TIME,
     hora_salida TIME,
+    activo BIT NOT NULL CONSTRAINT DF_Asistencia_activo DEFAULT 1,
     FOREIGN KEY (id_trabajador) REFERENCES Trabajador(id_trabajador)
 );
 
@@ -63,13 +65,15 @@ CREATE TABLE Cliente (
     nombres VARCHAR(100),
     nit VARCHAR(15) NOT NULL CONSTRAINT DF_Cliente_nit DEFAULT 'CF',
     telefono VARCHAR(20),
-    correo VARCHAR(100)
+    correo VARCHAR(100),
+    activo BIT NOT NULL CONSTRAINT DF_Cliente_activo DEFAULT 1
 );
 
 CREATE TABLE Categoria (
     id_categoria INT IDENTITY(1,1) PRIMARY KEY,
     nombre VARCHAR(80),
-    descripcion VARCHAR(250)
+    descripcion VARCHAR(250),
+    activo BIT NOT NULL CONSTRAINT DF_Categoria_activo DEFAULT 1
 );
 
 CREATE TABLE Producto (
@@ -79,6 +83,7 @@ CREATE TABLE Producto (
     precio_venta DECIMAL(10,2),
     stock INT,
     stock_minimo INT,
+    activo BIT NOT NULL CONSTRAINT DF_Producto_activo DEFAULT 1,
     FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria)
 );
 
@@ -87,7 +92,8 @@ CREATE TABLE Servicio (
     nombre VARCHAR(100),
     precio DECIMAL(10,2),
     descripcion VARCHAR(250),
-    categoria_servicio VARCHAR(80)
+    categoria_servicio VARCHAR(80),
+    activo BIT NOT NULL CONSTRAINT DF_Servicio_activo DEFAULT 1
 );
 
 CREATE TABLE Movimiento_Inventario (
@@ -137,13 +143,15 @@ CREATE TABLE Detalle_Servicio (
 CREATE TABLE Metodo_Pago (
     id_metodo_pago INT IDENTITY(1,1) PRIMARY KEY,
     nombre VARCHAR(50),
-    estado VARCHAR(20)
+    estado VARCHAR(20),
+    activo BIT NOT NULL CONSTRAINT DF_Metodo_Pago_activo DEFAULT 1
 );
 
 CREATE TABLE Caja (
     id_caja INT IDENTITY(1,1) PRIMARY KEY,
     nombre VARCHAR(80),
-    estado VARCHAR(20)
+    estado VARCHAR(20),
+    activo BIT NOT NULL CONSTRAINT DF_Caja_activo DEFAULT 1
 );
 
 CREATE TABLE Pago (
@@ -165,7 +173,11 @@ CREATE TABLE Transaccion_POS (
     referencia_pos VARCHAR(100),
     estado VARCHAR(20),
     fecha_hora DATETIME2,
-    FOREIGN KEY (id_pago) REFERENCES Pago(id_pago)
+    id_caja INT,
+    id_usuario INT,
+    FOREIGN KEY (id_pago) REFERENCES Pago(id_pago),
+    FOREIGN KEY (id_caja) REFERENCES Caja(id_caja),
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 
 CREATE TABLE Movimiento_Contable (
@@ -176,8 +188,10 @@ CREATE TABLE Movimiento_Contable (
     concepto VARCHAR(200),
     monto DECIMAL(10,2),
     fecha DATETIME2,
+    id_usuario INT,
     FOREIGN KEY (id_caja) REFERENCES Caja(id_caja),
-    FOREIGN KEY (id_pago) REFERENCES Pago(id_pago)
+    FOREIGN KEY (id_pago) REFERENCES Pago(id_pago),
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 
 CREATE TABLE Cuadre_Caja (
@@ -188,8 +202,27 @@ CREATE TABLE Cuadre_Caja (
     monto_real DECIMAL(10,2),
     diferencia DECIMAL(10,2),
     estado VARCHAR(20),
-    FOREIGN KEY (id_caja) REFERENCES Caja(id_caja)
+    id_usuario INT,
+    fondo_siguiente DECIMAL(10,2),
+    FOREIGN KEY (id_caja) REFERENCES Caja(id_caja),
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
+
+-- Bitácora: quién hizo cada operación, cuándo, y el registro antes y después en JSON.
+CREATE TABLE dbo.Bitacora (
+    id_bitacora INT IDENTITY(1,1) PRIMARY KEY,
+    fecha DATETIME2 NOT NULL CONSTRAINT DF_Bitacora_fecha DEFAULT SYSDATETIME(),
+    id_usuario INT NULL REFERENCES dbo.Usuario(id_usuario),
+    usuario VARCHAR(50) NOT NULL,
+    accion NVARCHAR(40) NOT NULL,
+    entidad NVARCHAR(40) NOT NULL,
+    id_registro INT NULL,
+    descripcion NVARCHAR(1000) NULL,
+    antes NVARCHAR(MAX) NULL,
+    despues NVARCHAR(MAX) NULL
+);
+CREATE INDEX IX_Bitacora_fecha ON dbo.Bitacora(fecha DESC);
+CREATE INDEX IX_Bitacora_registro ON dbo.Bitacora(entidad, id_registro);
 
 CREATE TABLE dbo.RolModulo (
     rol VARCHAR(30) NOT NULL,

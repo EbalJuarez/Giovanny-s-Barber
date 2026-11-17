@@ -26,6 +26,7 @@ public partial class Home : Form
         RegistrarDestino("Facturación", buttonFacturacion, accesoFacturacion);
         RegistrarDestino("Contabilidad", buttonContabilidad, accesoContabilidad);
         RegistrarDestino("Mi jornada", buttonMiJornada, accesoMiJornada);
+        RegistrarDestino("Auditoría", buttonAuditoria);
         labelUsuario.Text = sesion.NombreUsuario;
         labelRol.Text = sesion.Rol;
         labelBienvenida.Text = "Bienvenido, " + sesion.NombreUsuario + " · " +
@@ -118,6 +119,10 @@ public partial class Home : Form
                 var tarjeta = tarjetas[indice++];
                 tarjeta.Titulo.Text = indicador.Key;
                 tarjeta.Valor.Text = indicador.Value;
+                // Los textos largos (p. ej. el servicio más vendido) usan letra más pequeña para caber en la tarjeta.
+                tarjeta.Valor.Font = new Font(tarjeta.Valor.Font.FontFamily, indicador.Value.Length > 12 ? 12F : 20F, FontStyle.Bold);
+                bool alerta = indicador.Key == ConexionBD.TituloStockBajo && indicador.Value != "0";
+                tarjeta.Valor.ForeColor = alerta ? Color.Firebrick : SystemColors.ControlText;
                 tarjeta.Panel.Visible = true;
             }
             labelEstadoResumen.Text = resumen.Count == 0
@@ -142,7 +147,31 @@ public partial class Home : Form
     }
 
     private async void Actualizar_Click(object? sender, EventArgs e) => await ActualizarResumenAsync();
-    private void CerrarSesion_Click(object? sender, EventArgs e) => Close();
+    // CU-02: se confirma antes de salir; los registros se editan en ventanas modales, así que no queda nada a medias.
+    private void CerrarSesion_Click(object? sender, EventArgs e)
+    {
+        if (MessageBox.Show(this, "¿Desea cerrar la sesión?", "Cerrar sesión", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            Close();
+    }
+
+    // Aviso al iniciar sesión con los productos que llegaron a su stock mínimo.
+    private async Task AvisarStockBajoAsync()
+    {
+        if (sesion == null || !sesion.PuedeAbrir("Inventario")) return;
+        try
+        {
+            var productos = await ConexionBD.ProductosStockBajoAsync(sesion, cancelacion.Token);
+            if (productos.Count == 0 || IsDisposed || Disposing) return;
+            string lista = string.Join(Environment.NewLine, productos.Take(10).Select(p => "• " + p));
+            if (productos.Count > 10) lista += Environment.NewLine + $"… y {productos.Count - 10} más";
+            MessageBox.Show(this, "Estos productos están en su stock mínimo o por debajo:" + Environment.NewLine + Environment.NewLine + lista +
+                Environment.NewLine + Environment.NewLine + "Registre una entrada en Inventario › Movimientos al reabastecer.",
+                "Stock bajo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        catch (OperationCanceledException) { }
+        catch (SesionInvalidaException ex) { FinalizarSesion(ex.Message); }
+        catch (Exception) { /* El resumen ya informa los errores de conexión. */ }
+    }
 
     // Varias vistas pueden detectar a la vez la sesión inválida; solo se avisa una vez.
     internal void FinalizarSesion(string mensaje)
@@ -156,6 +185,13 @@ public partial class Home : Form
     private async void Home_Load(object sender, EventArgs e)
     {
         // Sin sesión, el diseñador puede abrir Home sin conectarse a la base de datos.
-        if (sesion != null) await ActualizarResumenAsync();
+        if (sesion == null) return;
+        await ActualizarResumenAsync();
+        await AvisarStockBajoAsync();
+    }
+
+    private void contenido_Paint(object sender, PaintEventArgs e)
+    {
+
     }
 }

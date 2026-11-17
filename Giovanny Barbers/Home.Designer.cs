@@ -28,6 +28,7 @@ namespace Giovanny_Barbers
             buttonFacturacion = new Button();
             buttonContabilidad = new Button();
             buttonMiJornada = new Button();
+            buttonAuditoria = new Button();
             panelSesion = new FlowLayoutPanel();
             labelUsuario = new Label();
             labelRol = new Label();
@@ -139,6 +140,7 @@ namespace Giovanny_Barbers
             panelMenu.Controls.Add(buttonFacturacion);
             panelMenu.Controls.Add(buttonContabilidad);
             panelMenu.Controls.Add(buttonMiJornada);
+            panelMenu.Controls.Add(buttonAuditoria);
             panelMenu.Dock = DockStyle.Fill;
             panelMenu.FlowDirection = FlowDirection.TopDown;
             panelMenu.Location = new Point(16, 156);
@@ -273,6 +275,24 @@ namespace Giovanny_Barbers
             buttonMiJornada.TextAlign = ContentAlignment.MiddleLeft;
             buttonMiJornada.UseVisualStyleBackColor = false;
             buttonMiJornada.Click += Navegacion_Click;
+            //
+            // buttonAuditoria
+            //
+            buttonAuditoria.BackColor = Color.FromArgb(31, 37, 41);
+            buttonAuditoria.Cursor = Cursors.Hand;
+            buttonAuditoria.FlatAppearance.BorderSize = 0;
+            buttonAuditoria.FlatStyle = FlatStyle.Flat;
+            buttonAuditoria.ForeColor = Color.White;
+            buttonAuditoria.Location = new Point(0, 378);
+            buttonAuditoria.Margin = new Padding(0, 0, 0, 8);
+            buttonAuditoria.Name = "buttonAuditoria";
+            buttonAuditoria.Padding = new Padding(10, 0, 0, 0);
+            buttonAuditoria.Size = new Size(195, 46);
+            buttonAuditoria.TabIndex = 7;
+            buttonAuditoria.Text = "Auditoría";
+            buttonAuditoria.TextAlign = ContentAlignment.MiddleLeft;
+            buttonAuditoria.UseVisualStyleBackColor = false;
+            buttonAuditoria.Click += Navegacion_Click;
             // 
             // panelSesion
             // 
@@ -340,6 +360,7 @@ namespace Giovanny_Barbers
             contenido.Padding = new Padding(28);
             contenido.Size = new Size(1029, 781);
             contenido.TabIndex = 1;
+            contenido.Paint += contenido_Paint;
             // 
             // panelInicio
             // 
@@ -863,6 +884,7 @@ namespace Giovanny_Barbers
         private Button buttonFacturacion;
         private Button buttonContabilidad;
         private Button buttonMiJornada;
+        private Button buttonAuditoria;
         private FlowLayoutPanel panelSesion;
         private Label labelUsuario;
         private Label labelRol;
